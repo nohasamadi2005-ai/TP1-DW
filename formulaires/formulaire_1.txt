@@ -1,0 +1,47 @@
+========================================
+FICHE DE RENSEIGNEMENTS
+========================================
+
+RENSEIGNEMENTS PERSONNELS
+-------------------------
+Nom : kkkk
+Prénom : kk
+Âge : 13
+Téléphone : 0763311781
+Email : oumi@1234.com
+
+RENSEIGNEMENTS ACADÉMIQUES
+--------------------------
+Filière : GSTR
+Année : 1ère année
+Nombre de projets : 1
+Modules : Aucun
+
+PROJETS RÉALISÉS
+----------------
+
+Projet 1
+Nom : 
+Date de début : 
+Date de fin : 
+Lieu : 
+Description : 
+
+CENTRES D'INTÉRÊT
+-----------------
+
+
+COMPÉTENCES
+-----------
+
+
+LANGUES
+-------
+
+
+REMARQUES
+---------
+
+
+Date d'enregistrement : 28/09/2026 18:39:30
+========================================
