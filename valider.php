@@ -1,37 +1,181 @@
-
 <?php
 
 session_start();
 
 
-/*
-|------------------------------------------------------------------
-| VÉRIFIER QUE LES DONNÉES EXISTENT
-|------------------------------------------------------------------
-*/
+/* =========================================================
+   1. VÉRIFIER QUE LES DONNÉES EXISTENT
+   ========================================================= */
 
-if (!isset($_SESSION['formulaire'])) {
+if (
+    !isset($_SESSION['formulaire']) ||
+    !is_array($_SESSION['formulaire'])
+) {
 
-    header("Location: formulaire.php");
+    header('Location: formulaire.php');
 
     exit;
 }
 
 
-/*
-|------------------------------------------------------------------
-| RÉCUPÉRER LES DONNÉES
-|------------------------------------------------------------------
-*/
-
-$data = $_SESSION['formulaire'];
+$data =
+    $_SESSION['formulaire'];
 
 
-/*
-|------------------------------------------------------------------
-| INFORMATIONS PERSONNELLES
-|------------------------------------------------------------------
-*/
+
+/* =========================================================
+   2. VÉRIFIER LES DATES
+   ========================================================= */
+
+function verifierDates(
+    $datesDebut,
+    $datesFin,
+    $type
+) {
+
+    /* Vérifier que ce sont bien des tableaux */
+
+    if (
+        !is_array($datesDebut) ||
+        !is_array($datesFin)
+    ) {
+
+        die("Erreur : données de dates invalides.");
+
+    }
+
+
+    /*
+       On prend le plus grand nombre
+       entre les dates de début et de fin.
+    */
+
+    $total =
+        max(
+            count($datesDebut),
+            count($datesFin)
+        );
+
+
+    for (
+        $i = 0;
+        $i < $total;
+        $i++
+    ) {
+
+
+        $debut =
+            $datesDebut[$i] ?? '';
+
+        $fin =
+            $datesFin[$i] ?? '';
+
+
+        /*
+           Les deux dates sont vides :
+           c'est autorisé.
+        */
+
+        if (
+            $debut == '' &&
+            $fin == ''
+        ) {
+
+            continue;
+
+        }
+
+
+        /*
+           Une seule date est remplie :
+           ce n'est pas autorisé.
+        */
+
+        if (
+            $debut == '' ||
+            $fin == ''
+        ) {
+
+            die(
+                "Erreur : les deux dates doivent être remplies dans le "
+                . $type
+                . " "
+                . ($i + 1)
+                . "."
+            );
+
+        }
+
+
+        /*
+           Transformer les chaînes en dates
+        */
+
+        $dateDebut =
+            DateTime::createFromFormat(
+                '!Y-m-d',
+                $debut
+            );
+
+
+        $dateFin =
+            DateTime::createFromFormat(
+                '!Y-m-d',
+                $fin
+            );
+
+
+        /*
+           Vérifier que les dates sont valides
+           et que la fin est après le début.
+        */
+
+        if (
+            !$dateDebut ||
+            !$dateFin ||
+            $dateDebut->format('Y-m-d') != $debut ||
+            $dateFin->format('Y-m-d') != $fin ||
+            $dateFin <= $dateDebut
+        ) {
+
+            die(
+                "Erreur dans le "
+                . $type
+                . " "
+                . ($i + 1)
+                . " : la date de fin doit être strictement postérieure à la date de début."
+            );
+
+        }
+
+    }
+
+}
+
+
+
+/* Vérifier les dates des projets */
+
+verifierDates(
+    $data['date_projet'] ?? [],
+    $data['date_fin'] ?? [],
+    'projet'
+);
+
+
+/* Vérifier les dates des stages */
+
+verifierDates(
+    $data['date_debut_stage'] ?? [],
+    $data['date_fin_stage'] ?? [],
+    'stage'
+);
+
+
+
+/* =========================================================
+   3. RÉCUPÉRER LES DONNÉES SIMPLES
+   ========================================================= */
 
 $nom =
     $data['nom'] ?? '';
@@ -48,55 +192,16 @@ $telephone =
 $email =
     $data['email'] ?? '';
 
-
-/*
-|------------------------------------------------------------------
-| INFORMATIONS ACADÉMIQUES
-|------------------------------------------------------------------
-*/
-
 $filiere =
     $data['filiere'] ?? '';
 
 $annee =
     $data['annee'] ?? '';
 
-$modules =
-    $data['modules'] ?? [];
-
 $nombre =
     $data['nombre'] ?? '';
 
-
-/*
-|------------------------------------------------------------------
-| PROJETS
-|------------------------------------------------------------------
-*/
-
-$nom_projets =
-    $data['nom_projet'] ?? [];
-
-$dates_debut =
-    $data['date_projet'] ?? [];
-
-$dates_fin =
-    $data['date_fin'] ?? [];
-
-$lieux =
-    $data['lieu'] ?? [];
-
-$descriptions =
-    $data['description'] ?? [];
-
-
-/*
-|------------------------------------------------------------------
-| AUTRES INFORMATIONS
-|------------------------------------------------------------------
-*/
-
-$centre_interet =
+$centreInteret =
     $data['centre_interet'] ?? '';
 
 $competences =
@@ -108,296 +213,487 @@ $langues =
 $remarques =
     $data['remarques'] ?? '';
 
-
-/*
-|------------------------------------------------------------------
-| VÉRIFICATION DES DATES
-|------------------------------------------------------------------
-*/
-
-for ($i = 0; $i < count($nom_projets); $i++) {
-
-    $dateDebut =
-        $dates_debut[$i] ?? '';
-
-    $dateFin =
-        $dates_fin[$i] ?? '';
+$fichierNom =
+    $data['fichier_nom'] ?? '';
 
 
-    if ($dateDebut !== '' && $dateFin !== '') {
+/* =========================================================
+   4. RÉCUPÉRER LES MODULES
+   ========================================================= */
 
-        $debut =
-            DateTime::createFromFormat(
-                'Y-m-d',
-                $dateDebut
-            );
+$modules =
+    $data['modules'] ?? [];
 
-        $fin =
-            DateTime::createFromFormat(
-                'Y-m-d',
-                $dateFin
-            );
+if (!is_array($modules)) {
+    $modules = [];
+}
 
 
-        if (!$debut || !$fin) {
 
-            die(
-                "Erreur : date invalide dans le projet " .
-                ($i + 1)
-            );
+/* =========================================================
+   5. COMMENCER LE CONTENU DU FICHIER TXT
+   ========================================================= */
 
-        }
+$contenu =
+    "========================================\n";
+
+$contenu .=
+    "FICHE DE RENSEIGNEMENTS\n";
+
+$contenu .=
+    "========================================\n\n";
 
 
-        /*
-        | Comparaison année + mois + jour
-        */
 
-        if ($fin < $debut) {
+/* =========================================================
+   6. INFORMATIONS PERSONNELLES
+   ========================================================= */
 
-            die(
-                "Erreur dans le projet " .
-                ($i + 1) .
-                " : la date de fin doit être après ou égale à la date de début."
-            );
+$contenu .=
+    "RENSEIGNEMENTS PERSONNELS\n";
 
-        }
+$contenu .=
+    "-------------------------\n";
+
+$contenu .=
+    "Nom : " . $nom . "\n";
+
+$contenu .=
+    "Prénom : " . $prenom . "\n";
+
+$contenu .=
+    "Âge : " . $age . "\n";
+
+$contenu .=
+    "Téléphone : " . $telephone . "\n";
+
+$contenu .=
+    "Email : " . $email . "\n\n";
+
+
+
+/* =========================================================
+   7. INFORMATIONS ACADÉMIQUES
+   ========================================================= */
+
+$contenu .=
+    "RENSEIGNEMENTS ACADÉMIQUES\n";
+
+$contenu .=
+    "--------------------------\n";
+
+$contenu .=
+    "Filière : " . $filiere . "\n";
+
+$contenu .=
+    "Année : " . $annee . "\n";
+
+$contenu .=
+    "Nombre de projets : " . $nombre . "\n";
+
+
+if (count($modules) > 0) {
+
+    $contenu .=
+        "Modules : "
+        . implode(', ', $modules)
+        . "\n";
+
+} else {
+
+    $contenu .=
+        "Modules : Aucun\n";
+}
+
+
+$contenu .= "\n";
+
+
+
+/* =========================================================
+   8. PROJETS
+   ========================================================= */
+
+$nomProjets =
+    $data['nom_projet'] ?? [];
+
+$debutProjets =
+    $data['date_projet'] ?? [];
+
+$finProjets =
+    $data['date_fin'] ?? [];
+
+$lieuxProjets =
+    $data['lieu'] ?? [];
+
+$descriptionsProjets =
+    $data['description'] ?? [];
+
+
+if (!is_array($nomProjets)) {
+    $nomProjets = [];
+}
+
+if (!is_array($debutProjets)) {
+    $debutProjets = [];
+}
+
+if (!is_array($finProjets)) {
+    $finProjets = [];
+}
+
+if (!is_array($lieuxProjets)) {
+    $lieuxProjets = [];
+}
+
+if (!is_array($descriptionsProjets)) {
+    $descriptionsProjets = [];
+}
+
+
+$contenu .=
+    "PROJETS RÉALISÉS\n";
+
+$contenu .=
+    "----------------\n";
+
+
+$numeroProjet = 0;
+
+
+for (
+    $i = 0;
+    $i < count($nomProjets);
+    $i++
+) {
+
+
+    $nomProjet =
+        $nomProjets[$i] ?? '';
+
+    $debutProjet =
+        $debutProjets[$i] ?? '';
+
+    $finProjet =
+        $finProjets[$i] ?? '';
+
+    $lieuProjet =
+        $lieuxProjets[$i] ?? '';
+
+    $descriptionProjet =
+        $descriptionsProjets[$i] ?? '';
+
+
+    /*
+       Si tout est vide,
+       on ne sauvegarde pas ce projet.
+    */
+
+    if (
+        trim(
+            $nomProjet .
+            $debutProjet .
+            $finProjet .
+            $lieuProjet .
+            $descriptionProjet
+        ) == ''
+    ) {
+
+        continue;
+
+    }
+
+
+    $numeroProjet++;
+
+
+    $contenu .=
+        "\nProjet "
+        . $numeroProjet
+        . "\n";
+
+    $contenu .=
+        "Nom : "
+        . $nomProjet
+        . "\n";
+
+    $contenu .=
+        "Date de début : "
+        . $debutProjet
+        . "\n";
+
+    $contenu .=
+        "Date de fin : "
+        . $finProjet
+        . "\n";
+
+    $contenu .=
+        "Lieu : "
+        . $lieuProjet
+        . "\n";
+
+    $contenu .=
+        "Description : "
+        . $descriptionProjet
+        . "\n";
+}
+
+
+if ($numeroProjet == 0) {
+
+    $contenu .=
+        "Aucun projet renseigné.\n";
+}
+
+
+
+/* =========================================================
+   9. STAGES
+   ========================================================= */
+
+$nomStages =
+    $data['nom_stage'] ?? [];
+
+$debutStages =
+    $data['date_debut_stage'] ?? [];
+
+$finStages =
+    $data['date_fin_stage'] ?? [];
+
+$lieuxStages =
+    $data['lieu_stage'] ?? [];
+
+$descriptionsStages =
+    $data['description_stage'] ?? [];
+
+
+if (!is_array($nomStages)) {
+    $nomStages = [];
+}
+
+if (!is_array($debutStages)) {
+    $debutStages = [];
+}
+
+if (!is_array($finStages)) {
+    $finStages = [];
+}
+
+if (!is_array($lieuxStages)) {
+    $lieuxStages = [];
+}
+
+if (!is_array($descriptionsStages)) {
+    $descriptionsStages = [];
+}
+
+
+$contenu .=
+    "\nSTAGES RÉALISÉS\n";
+
+$contenu .=
+    "---------------\n";
+
+
+$numeroStage = 0;
+
+
+for (
+    $i = 0;
+    $i < count($nomStages);
+    $i++
+) {
+
+
+    $nomStage =
+        $nomStages[$i] ?? '';
+
+    $debutStage =
+        $debutStages[$i] ?? '';
+
+    $finStage =
+        $finStages[$i] ?? '';
+
+    $lieuStage =
+        $lieuxStages[$i] ?? '';
+
+    $descriptionStage =
+        $descriptionsStages[$i] ?? '';
+
+
+    if (
+        trim(
+            $nomStage .
+            $debutStage .
+            $finStage .
+            $lieuStage .
+            $descriptionStage
+        ) == ''
+    ) {
+
+        continue;
+
+    }
+
+
+    $numeroStage++;
+
+
+    $contenu .=
+        "\nStage "
+        . $numeroStage
+        . "\n";
+
+    $contenu .=
+        "Nom : "
+        . $nomStage
+        . "\n";
+
+    $contenu .=
+        "Date de début : "
+        . $debutStage
+        . "\n";
+
+    $contenu .=
+        "Date de fin : "
+        . $finStage
+        . "\n";
+
+    $contenu .=
+        "Lieu : "
+        . $lieuStage
+        . "\n";
+
+    $contenu .=
+        "Description : "
+        . $descriptionStage
+        . "\n";
+}
+
+
+if ($numeroStage == 0) {
+
+    $contenu .=
+        "Aucun stage renseigné.\n";
+}
+
+
+
+/* =========================================================
+   10. AUTRES INFORMATIONS
+   ========================================================= */
+
+$contenu .=
+    "\nAUTRES INFORMATIONS\n";
+
+$contenu .=
+    "-------------------\n";
+
+$contenu .=
+    "Centres d'intérêt : "
+    . $centreInteret
+    . "\n";
+
+$contenu .=
+    "Compétences : "
+    . $competences
+    . "\n";
+
+$contenu .=
+    "Langues : "
+    . $langues
+    . "\n";
+
+$contenu .=
+    "Remarques : "
+    . $remarques
+    . "\n";
+
+$contenu .=
+    "Fichier transmis : "
+    . $fichierNom
+    . "\n\n";
+
+
+/* Date d'enregistrement */
+
+$contenu .=
+    "Date d'enregistrement : "
+    . date('d/m/Y H:i:s')
+    . "\n";
+
+
+$contenu .=
+    "========================================\n";
+
+
+
+/* =========================================================
+   11. CRÉER LE DOSSIER
+   ========================================================= */
+
+$dossier =
+    __DIR__ . '/formulaires';
+
+
+if (!is_dir($dossier)) {
+
+    if (!mkdir($dossier, 0755, true)) {
+
+        die(
+            "Erreur : impossible de créer le dossier formulaires."
+        );
 
     }
 
 }
 
 
-/*
-|------------------------------------------------------------------
-| PRÉPARER LE CONTENU DU FICHIER
-|------------------------------------------------------------------
-*/
 
-$contenu = "";
+/* =========================================================
+   12. CHOISIR UN NOM DE FICHIER
+   ========================================================= */
 
-$contenu .= "========================================\n";
-$contenu .= "FICHE DE RENSEIGNEMENTS\n";
-$contenu .= "========================================\n\n";
+$numeroFichier = 1;
 
 
-/*
-|------------------------------------------------------------------
-| RENSEIGNEMENTS PERSONNELS
-|------------------------------------------------------------------
-*/
+while (true) {
 
-$contenu .= "RENSEIGNEMENTS PERSONNELS\n";
-$contenu .= "-------------------------\n";
-
-$contenu .= "Nom : " . $nom . "\n";
-
-$contenu .= "Prénom : " . $prenom . "\n";
-
-$contenu .= "Âge : " . $age . "\n";
-
-$contenu .= "Téléphone : " . $telephone . "\n";
-
-$contenu .= "Email : " . $email . "\n\n";
+    $nomFichier =
+        "formulaire_"
+        . $numeroFichier
+        . ".txt";
 
 
-/*
-|------------------------------------------------------------------
-| RENSEIGNEMENTS ACADÉMIQUES
-|------------------------------------------------------------------
-*/
-
-$contenu .= "RENSEIGNEMENTS ACADÉMIQUES\n";
-$contenu .= "--------------------------\n";
-
-$contenu .= "Filière : " . $filiere . "\n";
-
-$contenu .= "Année : " . $annee . "\n";
-
-$contenu .= "Nombre de projets : " . $nombre . "\n";
+    $chemin =
+        $dossier
+        . "/"
+        . $nomFichier;
 
 
-$contenu .= "Modules : ";
+    if (!file_exists($chemin)) {
 
-if (!empty($modules)) {
+        break;
 
-    $contenu .= implode(", ", $modules);
-
-} else {
-
-    $contenu .= "Aucun";
-
-}
-
-$contenu .= "\n\n";
+    }
 
 
-/*
-|------------------------------------------------------------------
-| PROJETS
-|------------------------------------------------------------------
-*/
-
-$contenu .= "PROJETS RÉALISÉS\n";
-$contenu .= "----------------\n";
-
-
-for ($i = 0; $i < count($nom_projets); $i++) {
-
-    $contenu .= "\n";
-
-    $contenu .= "Projet " . ($i + 1) . "\n";
-
-    $contenu .= "Nom : " .
-        ($nom_projets[$i] ?? '') .
-        "\n";
-
-    $contenu .= "Date de début : " .
-        ($dates_debut[$i] ?? '') .
-        "\n";
-
-    $contenu .= "Date de fin : " .
-        ($dates_fin[$i] ?? '') .
-        "\n";
-
-    $contenu .= "Lieu : " .
-        ($lieux[$i] ?? '') .
-        "\n";
-
-    $contenu .= "Description : " .
-        ($descriptions[$i] ?? '') .
-        "\n";
+    $numeroFichier++;
 
 }
 
 
-/*
-|------------------------------------------------------------------
-| CENTRE D'INTÉRÊT
-|------------------------------------------------------------------
-*/
 
-$contenu .= "\n";
+/* =========================================================
+   13. ENREGISTRER LE FICHIER
+   ========================================================= */
 
-$contenu .= "CENTRES D'INTÉRÊT\n";
-$contenu .= "-----------------\n";
+$resultat =
+    file_put_contents(
+        $chemin,
+        $contenu
+    );
 
-$contenu .= $centre_interet . "\n\n";
-
-
-/*
-|------------------------------------------------------------------
-| COMPÉTENCES
-|------------------------------------------------------------------
-*/
-
-$contenu .= "COMPÉTENCES\n";
-$contenu .= "-----------\n";
-
-$contenu .= $competences . "\n\n";
-
-
-/*
-|------------------------------------------------------------------
-| LANGUES
-|------------------------------------------------------------------
-*/
-
-$contenu .= "LANGUES\n";
-$contenu .= "-------\n";
-
-$contenu .= $langues . "\n\n";
-
-
-/*
-|------------------------------------------------------------------
-| REMARQUES
-|------------------------------------------------------------------
-*/
-
-$contenu .= "REMARQUES\n";
-$contenu .= "---------\n";
-
-$contenu .= $remarques . "\n\n";
-
-
-/*
-|------------------------------------------------------------------
-| DATE D'ENREGISTREMENT
-|------------------------------------------------------------------
-*/
-
-$contenu .= "Date d'enregistrement : " .
-    date("d/m/Y H:i:s") .
-    "\n";
-
-$contenu .= "========================================\n";
-
-
-/*
-|------------------------------------------------------------------
-| CRÉER LE DOSSIER "formulaires"
-|------------------------------------------------------------------
-*/
-
-$dossier = "formulaires";
-
-
-if (!is_dir($dossier)) {
-
-    mkdir($dossier, 0777, true);
-
-}
-
-
-/*
-|------------------------------------------------------------------
-| CHERCHER LE PROCHAIN NUMÉRO
-|------------------------------------------------------------------
-*/
-
-$numero = 1;
-
-
-while (
-    file_exists(
-        $dossier . "/formulaire_" . $numero . ".txt"
-    )
-) {
-
-    $numero++;
-
-}
-
-
-/*
-|------------------------------------------------------------------
-| NOM DU NOUVEAU FICHIER
-|------------------------------------------------------------------
-*/
-
-$fichier =
-    $dossier . "/formulaire_" . $numero . ".txt";
-
-
-/*
-|------------------------------------------------------------------
-| ENREGISTRER LE FORMULAIRE
-|------------------------------------------------------------------
-*/
-
-$resultat = file_put_contents(
-    $fichier,
-    $contenu,
-    LOCK_EX
-);
-
-
-/*
-|------------------------------------------------------------------
-| VÉRIFIER L'ENREGISTREMENT
-|------------------------------------------------------------------
-*/
 
 if ($resultat === false) {
 
@@ -407,128 +703,68 @@ if ($resultat === false) {
 
 }
 
+
+/* Chemin affiché à l'utilisateur */
+
+$cheminAffiche =
+    "formulaires/"
+    . $nomFichier;
+
 ?>
 
 <!DOCTYPE html>
-
 <html lang="fr">
 
 <head>
 
-<meta charset="UTF-8">
+    <meta charset="UTF-8">
 
-<meta
-    name="viewport"
-    content="width=device-width, initial-scale=1.0"
->
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
 
-<title>Validation</title>
+    <title>Validation</title>
 
-
-<style>
-
-body {
-
-    font-family: Arial, sans-serif;
-
-    background:
-        linear-gradient(
-            135deg,
-            #eef2f7,
-            #dce6f2
-        );
-
-    margin: 0;
-
-    padding: 30px;
-
-}
-
-
-.container {
-
-    max-width: 700px;
-
-    margin: 80px auto;
-
-    background: white;
-
-    padding: 40px;
-
-    border-radius: 15px;
-
-    box-shadow:
-        0 5px 20px
-        rgba(0,0,0,0.1);
-
-    text-align: center;
-
-}
-
-
-h1 {
-
-    color: #28a745;
-
-}
-
-
-p {
-
-    font-size: 17px;
-
-}
-
-
-.btn {
-
-    display: inline-block;
-
-    margin-top: 25px;
-
-    padding: 12px 25px;
-
-    background: #0066cc;
-
-    color: white;
-
-    text-decoration: none;
-
-    border-radius: 6px;
-
-}
-
-</style>
+    <link rel="stylesheet" href="style.css">
 
 </head>
 
+
 <body>
 
-<div class="container">
+<div class="success-container">
 
 
-<h1>
-    Formulaire validé avec succès !
-</h1>
+    <h1>
+        Formulaire validé avec succès !
+    </h1>
 
 
-<p>
-
-    Les informations ont été enregistrées dans :
-
-    <strong>
-        formulaires/formulaire_<?php echo $numero; ?>.txt
-    </strong>
-
-</p>
+    <p>
+        Les informations ont été enregistrées dans :
+    </p>
 
 
-<a
-    href="formulaire.php"
-    class="btn"
->
-    Retour au formulaire
-</a>
+    <p>
+
+        <strong>
+            <?= htmlspecialchars(
+                $cheminAffiche,
+                ENT_QUOTES,
+                'UTF-8'
+            ) ?>
+        </strong>
+
+    </p>
+
+
+    <a
+        href="formulaire.php"
+        class="button-link btn-modifier"
+    >
+        Retour au formulaire
+    </a>
 
 
 </div>
@@ -536,4 +772,3 @@ p {
 </body>
 
 </html>
-

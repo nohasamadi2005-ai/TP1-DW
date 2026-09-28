@@ -1,37 +1,36 @@
 <?php
-
 session_start();
 
-/*
-|--------------------------------------------------------------------------
-| EFFACER LE FORMULAIRE
-|--------------------------------------------------------------------------
-| Si on arrive avec ?effacer=1, on supprime les anciennes données.
-*/
+/* =========================================================
+   1. EFFACER LES DONNÉES
+   ========================================================= */
 
 if (isset($_GET['effacer']) && $_GET['effacer'] == '1') {
 
     unset($_SESSION['formulaire']);
 
-    header("Location: formulaire.php");
+    header('Location: formulaire.php');
     exit;
 }
 
 
-/*
-|--------------------------------------------------------------------------
-| RÉCUPÉRER LES DONNÉES DE LA SESSION
-|--------------------------------------------------------------------------
-*/
+/* =========================================================
+   2. RÉCUPÉRER LES DONNÉES DE LA SESSION
+   ========================================================= */
 
 $data = $_SESSION['formulaire'] ?? [];
 
 
-/*
-|--------------------------------------------------------------------------
-| MODULES
-|--------------------------------------------------------------------------
-*/
+/* Fonction pour afficher une donnée sans problème HTML */
+function h($value)
+{
+    return htmlspecialchars((string)$value, ENT_QUOTES, 'UTF-8');
+}
+
+
+/* =========================================================
+   3. RÉCUPÉRER LES INFORMATIONS
+   ========================================================= */
 
 $modules = $data['modules'] ?? [];
 
@@ -39,30 +38,11 @@ if (!is_array($modules)) {
     $modules = [];
 }
 
-
-/*
-|--------------------------------------------------------------------------
-| ANNÉE
-|--------------------------------------------------------------------------
-*/
-
 $annee = $data['annee'] ?? '1ère année';
-
-
-/*
-|--------------------------------------------------------------------------
-| NOMBRE DE PROJETS
-|--------------------------------------------------------------------------
-*/
-
 $nombre = $data['nombre'] ?? '1';
 
 
-/*
-|--------------------------------------------------------------------------
-| PROJETS
-|--------------------------------------------------------------------------
-*/
+/* Projets */
 
 $nom_projets = $data['nom_projet'] ?? [];
 $dates_debut = $data['date_projet'] ?? [];
@@ -71,49 +51,60 @@ $lieux = $data['lieu'] ?? [];
 $descriptions = $data['description'] ?? [];
 
 
-/*
-|--------------------------------------------------------------------------
-| SÉCURITÉ : vérifier que les projets sont des tableaux
-|--------------------------------------------------------------------------
-*/
+/* Stages */
 
-if (!is_array($nom_projets)) {
-    $nom_projets = [];
-}
-
-if (!is_array($dates_debut)) {
-    $dates_debut = [];
-}
-
-if (!is_array($dates_fin)) {
-    $dates_fin = [];
-}
-
-if (!is_array($lieux)) {
-    $lieux = [];
-}
-
-if (!is_array($descriptions)) {
-    $descriptions = [];
-}
+$nom_stages = $data['nom_stage'] ?? [];
+$dates_debut_stages = $data['date_debut_stage'] ?? [];
+$dates_fin_stages = $data['date_fin_stage'] ?? [];
+$lieux_stages = $data['lieu_stage'] ?? [];
+$descriptions_stages = $data['description_stage'] ?? [];
 
 
-/*
-|--------------------------------------------------------------------------
-| NOMBRE DE PROJETS À AFFICHER
-|--------------------------------------------------------------------------
-*/
+/* Vérifier que les tableaux sont bien des tableaux */
+
+if (!is_array($nom_projets)) $nom_projets = [];
+if (!is_array($dates_debut)) $dates_debut = [];
+if (!is_array($dates_fin)) $dates_fin = [];
+if (!is_array($lieux)) $lieux = [];
+if (!is_array($descriptions)) $descriptions = [];
+
+if (!is_array($nom_stages)) $nom_stages = [];
+if (!is_array($dates_debut_stages)) $dates_debut_stages = [];
+if (!is_array($dates_fin_stages)) $dates_fin_stages = [];
+if (!is_array($lieux_stages)) $lieux_stages = [];
+if (!is_array($descriptions_stages)) $descriptions_stages = [];
+
+
+/* =========================================================
+   4. DÉTERMINER LE NOMBRE DE BLOCS À AFFICHER
+   ========================================================= */
 
 $nombre_projets = count($nom_projets);
 
 if ($nombre_projets == 0) {
-    $nombre_projets = 1;
+
+    if ($nombre == 'plus de 5') {
+        $nombre_projets = 6;
+    } else {
+        $nombre_projets = (int)$nombre;
+
+        if ($nombre_projets < 1) {
+            $nombre_projets = 1;
+        }
+    }
+}
+
+
+/* On affiche au moins un stage */
+$nombre_stages = count($nom_stages);
+
+if ($nombre_stages < 1) {
+    $nombre_stages = 1;
 }
 
 ?>
 
 <!DOCTYPE html>
-
 <html lang="fr">
 
 <head>
@@ -128,999 +119,598 @@ if ($nombre_projets == 0) {
 
 </head>
 
-
 <body>
-
 
 <div class="form-container">
 
-<form
-    id="monFormulaire"
-    action="recap.php"
-    method="POST"
-    enctype="multipart/form-data"
->
+    <h1>Fiche de renseignements</h1>
+
+    <p class="intro">
+        Veuillez remplir les informations suivantes.
+    </p>
 
 
-<!-- =========================================================
-     RENSEIGNEMENTS PERSONNELS
-========================================================= -->
+    <!-- Message d'erreur concernant les dates -->
 
-<h2>Renseignements personnels</h2>
+    <?php
 
+    if (isset($_GET['erreur']) && $_GET['erreur'] == 'dates') {
 
-<label for="nom">
-    Nom :
-</label>
+        echo '<p class="error">
+        Vérifiez les dates : la date de fin doit être strictement
+        postérieure à la date de début.
+        </p>';
+    }
 
-<input
-    type="text"
-    id="nom"
-    name="nom"
-    value="<?= htmlspecialchars($data['nom'] ?? '') ?>"
-    required
->
+    ?>
 
 
-<label for="prenom">
-    Prénom :
-</label>
-
-<input
-    type="text"
-    id="prenom"
-    name="prenom"
-    value="<?= htmlspecialchars($data['prenom'] ?? '') ?>"
-    required
->
+    <form id="monFormulaire"
+          action="recap.php"
+          method="POST"
+          enctype="multipart/form-data">
 
 
-<label for="age">
-    Âge :
-</label>
+        <!-- =====================================================
+             RENSEIGNEMENTS PERSONNELS
+             ===================================================== -->
 
-<input
-    type="number"
-    id="age"
-    name="age"
-    min="1"
-    max="100"
-    value="<?= htmlspecialchars($data['age'] ?? '') ?>"
-    required
->
+        <fieldset>
+
+            <legend>Renseignements personnels</legend>
 
 
-<label for="telephone">
-    Numéro de téléphone :
-</label>
+            <label for="nom">Nom :</label>
 
-<input
-    type="tel"
-    id="telephone"
-    name="numero_telephone"
-    value="<?= htmlspecialchars($data['numero_telephone'] ?? '') ?>"
-    required
->
+            <input
+                type="text"
+                id="nom"
+                name="nom"
+                value="<?= h($data['nom'] ?? '') ?>"
+                required
+            >
 
 
-<label for="email">
-    Email :
-</label>
+            <label for="prenom">Prénom :</label>
 
-<input
-    type="email"
-    id="email"
-    name="email"
-    value="<?= htmlspecialchars($data['email'] ?? '') ?>"
-    required
->
+            <input
+                type="text"
+                id="prenom"
+                name="prenom"
+                value="<?= h($data['prenom'] ?? '') ?>"
+                required
+            >
 
 
-<!-- =========================================================
-     RENSEIGNEMENTS ACADÉMIQUES
-========================================================= -->
+            <label for="age">Age :</label>
 
-<h2>Renseignements académiques</h2>
-
-
-<label>
-    Vous êtes en :
-</label>
-
-
-<div class="radio-group">
+            <input
+                type="number"
+                id="age"
+                name="age"
+                min="1"
+                max="100"
+                value="<?= h($data['age'] ?? '') ?>"
+                required
+            >
 
 
-<label>
+            <label for="telephone">
+                Numéro de téléphone :
+            </label>
 
-    <input
-        type="radio"
-        name="filiere"
-        value="2AP"
-        <?= ($data['filiere'] ?? '') == '2AP' ? 'checked' : '' ?>
-    >
-
-    2AP
-
-</label>
-
-
-<label>
-
-    <input
-        type="radio"
-        name="filiere"
-        value="GSTR"
-        <?= ($data['filiere'] ?? '') == 'GSTR' ? 'checked' : '' ?>
-    >
-
-    GSTR
-
-</label>
+            <input
+                type="tel"
+                id="telephone"
+                name="numero_telephone"
+                value="<?= h($data['numero_telephone'] ?? '') ?>"
+                required
+            >
 
 
-<label>
+            <label for="email">Email :</label>
 
-    <input
-        type="radio"
-        name="filiere"
-        value="GI"
-        <?= ($data['filiere'] ?? '') == 'GI' ? 'checked' : '' ?>
-    >
+            <input
+                type="email"
+                id="email"
+                name="email"
+                value="<?= h($data['email'] ?? '') ?>"
+                required
+            >
 
-    GI
-
-</label>
-
-
-<label>
-
-    <input
-        type="radio"
-        name="filiere"
-        value="SCM"
-        <?= ($data['filiere'] ?? '') == 'SCM' ? 'checked' : '' ?>
-    >
-
-    SCM
-
-</label>
+        </fieldset>
 
 
-<label>
 
-    <input
-        type="radio"
-        name="filiere"
-        value="GC"
-        <?= ($data['filiere'] ?? '') == 'GC' ? 'checked' : '' ?>
-    >
+        <!-- =====================================================
+             RENSEIGNEMENTS ACADÉMIQUES
+             ===================================================== -->
 
-    GC
+        <fieldset>
 
-</label>
+            <legend>Renseignements académiques</legend>
 
 
-<label>
+            <label>Vous êtes en :</label>
 
-    <input
-        type="radio"
-        name="filiere"
-        value="MS"
-        <?= ($data['filiere'] ?? '') == 'MS' ? 'checked' : '' ?>
-    >
 
-    MS
+            <div class="choice-group">
 
-</label>
+                <?php
 
+                $filieres = [
+                    '2AP',
+                    'GSTR',
+                    'GI',
+                    'SCM',
+                    'GC',
+                    'MS'
+                ];
+
+                foreach ($filieres as $filiere):
+
+                ?>
+
+                    <label class="choice">
+
+                        <input
+                            type="radio"
+                            name="filiere"
+                            value="<?= h($filiere) ?>"
+                            <?= (($data['filiere'] ?? '') == $filiere)
+                                ? 'checked'
+                                : '' ?>
+                            required
+                        >
+
+                        <?= h($filiere) ?>
+
+                    </label>
+
+                <?php endforeach; ?>
+
+            </div>
+
+
+
+            <label>Année :</label>
+
+
+            <div class="choice-group">
+
+
+                <label class="choice" id="annee1">
+
+                    <input
+                        type="radio"
+                        name="annee"
+                        value="1ère année"
+                        <?= $annee == '1ère année' ? 'checked' : '' ?>
+                        required
+                    >
+
+                    1ère année
+
+                </label>
+
+
+
+                <label class="choice" id="annee2">
+
+                    <input
+                        type="radio"
+                        name="annee"
+                        value="2ème année"
+                        <?= $annee == '2ème année' ? 'checked' : '' ?>
+                        required
+                    >
+
+                    2ème année
+
+                </label>
+
+
+
+                <label class="choice" id="annee3">
+
+                    <input
+                        type="radio"
+                        name="annee"
+                        value="3ème année"
+                        <?= $annee == '3ème année' ? 'checked' : '' ?>
+                        required
+                    >
+
+                    3ème année
+
+                </label>
+
+            </div>
+
+
+
+            <h2>Modules suivis cette année</h2>
+
+
+            <div
+                class="checkbox-group"
+                id="modules-container"
+            >
+
+                <p class="muted">
+                    Veuillez choisir une filière.
+                </p>
+
+            </div>
+
+        </fieldset>
+
+
+
+        <!-- =====================================================
+             PROJETS
+             ===================================================== -->
+
+        <fieldset>
+
+            <legend>Projets réalisés</legend>
+
+
+            <label for="nombre">
+
+                Nombre de projets réalisés cette année :
+
+            </label>
+
+
+            <select id="nombre" name="nombre">
+
+                <?php
+
+                $nombres = [
+                    '1',
+                    '2',
+                    '3',
+                    '4',
+                    '5',
+                    'plus de 5'
+                ];
+
+                foreach ($nombres as $n):
+
+                ?>
+
+                    <option
+                        value="<?= h($n) ?>"
+                        <?= (string)$nombre == $n
+                            ? 'selected'
+                            : '' ?>
+                    >
+
+                        <?= $n == 'plus de 5'
+                            ? 'Plus de 5'
+                            : h($n) ?>
+
+                    </option>
+
+                <?php endforeach; ?>
+
+            </select>
+
+
+
+            <div id="projets">
+
+
+                <?php
+
+                for ($i = 0; $i < $nombre_projets; $i++):
+
+                ?>
+
+                    <div class="repeat-card projet">
+
+                        <h3>
+                            Projet <?= $i + 1 ?>
+                        </h3>
+
+
+                        <label>
+                            Nom du projet :
+                        </label>
+
+                        <input
+                            type="text"
+                            name="nom_projet[]"
+                            value="<?= h($nom_projets[$i] ?? '') ?>"
+                        >
+
+
+                        <label>
+                            Date de début :
+                        </label>
+
+                        <input
+                            type="date"
+                            class="date-debut"
+                            name="date_projet[]"
+                            value="<?= h($dates_debut[$i] ?? '') ?>"
+                        >
+
+
+                        <label>
+                            Date de fin :
+                        </label>
+
+                        <input
+                            type="date"
+                            class="date-fin"
+                            name="date_fin[]"
+                            value="<?= h($dates_fin[$i] ?? '') ?>"
+                        >
+
+
+                        <label>
+                            Lieu :
+                        </label>
+
+                        <input
+                            type="text"
+                            name="lieu[]"
+                            value="<?= h($lieux[$i] ?? '') ?>"
+                        >
+
+
+                        <label>
+                            Description :
+                        </label>
+
+                        <textarea
+                            name="description[]"
+                        ><?= h($descriptions[$i] ?? '') ?></textarea>
+
+                    </div>
+
+                <?php endfor; ?>
+
+            </div>
+
+
+
+            <button
+                type="button"
+                class="btn-secondary"
+                id="ajouterProjet"
+            >
+                + Ajouter un projet
+            </button>
+
+        </fieldset>
+
+
+
+        <!-- =====================================================
+             STAGES
+             ===================================================== -->
+
+        <fieldset>
+
+            <legend>Stages réalisés</legend>
+
+
+            <div id="stages">
+
+
+                <?php
+
+                for ($i = 0; $i < $nombre_stages; $i++):
+
+                ?>
+
+                    <div class="repeat-card stage">
+
+                        <h3>
+                            Stage <?= $i + 1 ?>
+                        </h3>
+
+
+                        <label>
+                            Nom du stage :
+                        </label>
+
+                        <input
+                            type="text"
+                            name="nom_stage[]"
+                            value="<?= h($nom_stages[$i] ?? '') ?>"
+                        >
+
+
+                        <label>
+                            Date de début :
+                        </label>
+
+                        <input
+                            type="date"
+                            class="date-debut"
+                            name="date_debut_stage[]"
+                            value="<?= h($dates_debut_stages[$i] ?? '') ?>"
+                        >
+
+
+                        <label>
+                            Date de fin :
+                        </label>
+
+                        <input
+                            type="date"
+                            class="date-fin"
+                            name="date_fin_stage[]"
+                            value="<?= h($dates_fin_stages[$i] ?? '') ?>"
+                        >
+
+
+                        <label>
+                            Lieu :
+                        </label>
+
+                        <input
+                            type="text"
+                            name="lieu_stage[]"
+                            value="<?= h($lieux_stages[$i] ?? '') ?>"
+                        >
+
+
+                        <label>
+                            Description :
+                        </label>
+
+                        <textarea
+                            name="description_stage[]"
+                        ><?= h($descriptions_stages[$i] ?? '') ?></textarea>
+
+                    </div>
+
+                <?php endfor; ?>
+
+            </div>
+
+
+
+            <button
+                type="button"
+                class="btn-secondary"
+                id="ajouterStage"
+            >
+                + Ajouter un stage
+            </button>
+
+        </fieldset>
+
+
+
+        <!-- =====================================================
+             AUTRES INFORMATIONS
+             ===================================================== -->
+
+        <fieldset>
+
+            <legend>Autres informations</legend>
+
+
+            <label for="centre_interet">
+                Centres d'intérêt :
+            </label>
+
+            <textarea
+                id="centre_interet"
+                name="centre_interet"
+            ><?= h($data['centre_interet'] ?? '') ?></textarea>
+
+
+
+            <label for="competences">
+                Compétences :
+            </label>
+
+            <textarea
+                id="competences"
+                name="competences"
+            ><?= h($data['competences'] ?? '') ?></textarea>
+
+
+
+            <label for="langues">
+                Langues :
+            </label>
+
+            <input
+                type="text"
+                id="langues"
+                name="langues"
+                value="<?= h($data['langues'] ?? '') ?>"
+            >
+
+
+
+            <label for="remarques">
+                Vos remarques :
+            </label>
+
+            <textarea
+                id="remarques"
+                name="remarques"
+                rows="4"
+            ><?= h($data['remarques'] ?? '') ?></textarea>
+
+
+
+            <label for="fichier">
+                Choisir un fichier :
+            </label>
+
+            <input
+                type="file"
+                id="fichier"
+                name="fichier"
+            >
+
+
+            <?php if (!empty($data['fichier_nom'])): ?>
+
+                <p class="muted">
+
+                    Fichier déjà transmis :
+                    <?= h($data['fichier_nom']) ?>
+
+                </p>
+
+            <?php endif; ?>
+
+        </fieldset>
+
+
+
+        <!-- BOUTONS -->
+
+        <div class="buttons">
+
+            <button
+                type="submit"
+                class="btn-submit"
+            >
+                Envoyer
+            </button>
+
+
+            <button
+                type="button"
+                class="btn-reset"
+                id="effacer"
+            >
+                Effacer
+            </button>
+
+        </div>
+
+    </form>
 
 </div>
 
 
-<!-- =========================================================
-     ANNÉE
-========================================================= -->
-
-<label>
-    Année :
-</label>
-
-
-<div class="radio-group">
-
-
-<label id="annee1">
-
-    <input
-        type="radio"
-        name="annee"
-        value="1ère année"
-        <?= $annee == '1ère année' ? 'checked' : '' ?>
-    >
-
-    1ère année
-
-</label>
-
-
-<label id="annee2">
-
-    <input
-        type="radio"
-        name="annee"
-        value="2ème année"
-        <?= $annee == '2ème année' ? 'checked' : '' ?>
-    >
-
-    2ème année
-
-</label>
-
-
-<label id="annee3">
-
-    <input
-        type="radio"
-        name="annee"
-        value="3ème année"
-        <?= $annee == '3ème année' ? 'checked' : '' ?>
-    >
-
-    3ème année
-
-</label>
-
-
-</div>
-
-
-<!-- =========================================================
-     MODULES
-========================================================= -->
-
-
-<h2>Modules suivis cette année</h2>
-
-<div class="checkbox-group" id="modules-container">
-
-    <!-- Les modules seront affichés ici selon la filière -->
-
-</div>
-
-
-
-<!-- =========================================================
-     NOMBRE DE PROJETS
-========================================================= -->
-
-<h2>Nombre de projets</h2>
-
-
-<label for="nombre">
-
-    Nombre de projets réalisés cette année :
-
-</label>
-
-
-<select id="nombre" name="nombre">
-
-    <option
-        value="1"
-        <?= $nombre == '1' ? 'selected' : '' ?>
-    >
-        1
-    </option>
-
-
-    <option
-        value="2"
-        <?= $nombre == '2' ? 'selected' : '' ?>
-    >
-        2
-    </option>
-
-
-    <option
-        value="3"
-        <?= $nombre == '3' ? 'selected' : '' ?>
-    >
-        3
-    </option>
-
-
-    <option
-        value="4"
-        <?= $nombre == '4' ? 'selected' : '' ?>
-    >
-        4
-    </option>
-
-
-    <option
-        value="5"
-        <?= $nombre == '5' ? 'selected' : '' ?>
-    >
-        5
-    </option>
-
-
-    <option
-        value="plus de 5"
-        <?= $nombre == 'plus de 5' ? 'selected' : '' ?>
-    >
-        Plus de 5
-    </option>
-
-</select>
-
-
-<!-- =========================================================
-     PROJETS
-========================================================= -->
-
-<h2>Projets réalisés</h2>
-
-
-<div id="projets">
-
-
-<?php for ($i = 0; $i < $nombre_projets; $i++): ?>
-
-
-<div class="projet">
-
-
-<h3>
-    Projet <?= $i + 1 ?>
-</h3>
-
-
-<label>
-    Nom du projet :
-</label>
-
-
-<input
-    type="text"
-    name="nom_projet[]"
-    value="<?= htmlspecialchars($nom_projets[$i] ?? '') ?>"
->
-
-
-<label>
-    Date de début :
-</label>
-
-
-<input
-    type="date"
-    class="date-debut"
-    name="date_projet[]"
-    value="<?= htmlspecialchars($dates_debut[$i] ?? '') ?>"
->
-
-
-<label>
-    Date de fin :
-</label>
-
-
-<input
-    type="date"
-    class="date-fin"
-    name="date_fin[]"
-    value="<?= htmlspecialchars($dates_fin[$i] ?? '') ?>"
->
-
-
-<label>
-    Lieu :
-</label>
-
-
-<input
-    type="text"
-    name="lieu[]"
-    value="<?= htmlspecialchars($lieux[$i] ?? '') ?>"
->
-
-
-<label>
-    Description :
-</label>
-
-
-<textarea name="description[]"><?= htmlspecialchars($descriptions[$i] ?? '') ?></textarea>
-
-
-</div>
-
-
-<?php endfor; ?>
-
-
-</div>
-
-
-<br>
-
-
-<button
-    type="button"
-    class="btn-secondary"
-    onclick="ajouterProjet()"
->
-    + Ajouter un projet
-</button>
-
-
-<!-- =========================================================
-     CENTRES D'INTÉRÊT
-========================================================= -->
-
-<h2>Centres d'intérêt</h2>
-
-
-<label>
-    Centre d'intérêt :
-</label>
-
-
-<input
-    type="text"
-    name="centre_interet"
-    value="<?= htmlspecialchars($data['centre_interet'] ?? '') ?>"
->
-
-
-<!-- =========================================================
-     COMPÉTENCES
-========================================================= -->
-
-<h2>Compétences et langues</h2>
-
-
-<label>
-    Compétences :
-</label>
-
-
-<input
-    type="text"
-    name="competences"
-    value="<?= htmlspecialchars($data['competences'] ?? '') ?>"
->
-
-
-<label>
-    Langues :
-</label>
-
-
-<input
-    type="text"
-    name="langues"
-    value="<?= htmlspecialchars($data['langues'] ?? '') ?>"
->
-
-
-<!-- =========================================================
-     REMARQUES
-========================================================= -->
-
-<h2>Vos remarques</h2>
-
-
-<textarea
-    name="remarques"
-    rows="5"
-><?= htmlspecialchars($data['remarques'] ?? '') ?></textarea>
-
-
-<!-- =========================================================
-     FICHIER
-========================================================= -->
-
-<h2>Fichier</h2>
-
-
-<label>
-    Choisir un fichier :
-</label>
-
-
-<input
-    type="file"
-    name="fichier"
->
-
-
-<!-- =========================================================
-     BOUTONS
-========================================================= -->
-
-<div class="buttons">
-
-
-<button
-    type="submit"
-    class="btn-submit"
->
-    Envoyer
-</button>
-
-
-<button
-    type="button"
-    class="btn-reset"
-    onclick="effacerFormulaire()"
->
-    Effacer
-</button>
-
-
-</div>
-
-
-</form>
-
-</div>
-
-
-<!-- =========================================================
-     JAVASCRIPT
-========================================================= -->
 
 <script>
 
-
-/*
-|--------------------------------------------------------------------------
-| COMPTEUR DES PROJETS
-|--------------------------------------------------------------------------
-*/
-
-let numeroProjet =
-    document.querySelectorAll('.projet').length;
-
-
-/*
-|--------------------------------------------------------------------------
-| AJOUTER UN PROJET
-|--------------------------------------------------------------------------
-*/
-
-function ajouterProjet() {
-
-    numeroProjet++;
-
-
-    let div = document.createElement("div");
-
-    div.className = "projet";
-
-
-    div.innerHTML = `
-
-        <h3>
-            Projet ${numeroProjet}
-        </h3>
-
-
-        <label>
-            Nom du projet :
-        </label>
-
-        <input
-            type="text"
-            name="nom_projet[]"
-        >
-
-
-        <label>
-            Date de début :
-        </label>
-
-        <input
-            type="date"
-            class="date-debut"
-            name="date_projet[]"
-        >
-
-
-        <label>
-            Date de fin :
-        </label>
-
-        <input
-            type="date"
-            class="date-fin"
-            name="date_fin[]"
-        >
-
-
-        <label>
-            Lieu :
-        </label>
-
-        <input
-            type="text"
-            name="lieu[]"
-        >
-
-
-        <label>
-            Description :
-        </label>
-
-        <textarea
-            name="description[]"
-        ></textarea>
-
-    `;
-
-
-    document
-        .getElementById("projets")
-        .appendChild(div);
-
-
-    configurerDates(div);
-}
-
-
-/*
-|--------------------------------------------------------------------------
-| CONTRÔLE DES DATES
-|--------------------------------------------------------------------------
-*/
-
-function configurerDates(projet) {
-
-    let dateDebut = projet.querySelector(".date-debut");
-    let dateFin = projet.querySelector(".date-fin");
-
-
-    /*
-    |----------------------------------------------------------------------
-    | Quand la date de début est choisie
-    |----------------------------------------------------------------------
-    */
-
-    dateDebut.addEventListener("change", function() {
-
-        if (dateDebut.value !== "") {
-
-            /*
-            | La date de fin ne peut pas être avant la date de début
-            */
-
-            dateFin.min = dateDebut.value;
-
-
-            /*
-            | Si une date de fin existe déjà,
-            | on vérifie si elle est encore valide
-            */
-
-            if (
-                dateFin.value !== "" &&
-                dateFin.value < dateDebut.value
-            ) {
-
-                dateFin.value = "";
-
-                alert(
-                    "La date de fin ne peut pas être avant la date de début."
-                );
-
-            }
-
-        }
-
-    });
-
-
-    /*
-    |----------------------------------------------------------------------
-    | Quand la date de fin est choisie
-    |----------------------------------------------------------------------
-    */
-
-    dateFin.addEventListener("change", function() {
-
-        /*
-        | Le navigateur ne donne une valeur que lorsque
-        | la date est complètement sélectionnée.
-        */
-
-        if (
-            dateDebut.value !== "" &&
-            dateFin.value !== ""
-        ) {
-
-            if (dateFin.value < dateDebut.value) {
-
-                alert(
-                    "Erreur : la date de fin doit être après ou égale à la date de début."
-                );
-
-                dateFin.value = "";
-
-            }
-
-        }
-
-    });
-
-
-    /*
-    |----------------------------------------------------------------------
-    | Si le formulaire contient déjà une date de début
-    |---------------------------------------------------------------------- 
-    */
-
-    if (dateDebut.value !== "") {
-
-        dateFin.min = dateDebut.value;
-
-    }
-
-}
-
-/*
-|------------------------------------------------------------------
-| Si une date de début existe déjà
-|------------------------------------------------------------------
-*/
-
-if (dateDebut.value !== "") {
-
-    dateFin.min = dateDebut.value;
-
-}
-
-
-}
-
-
-
-/*
-|--------------------------------------------------------------------------
-| CONFIGURER LES DATES DES PROJETS EXISTANTS
-|--------------------------------------------------------------------------
-*/
-
-document
-    .querySelectorAll(".projet")
-    .forEach(function(projet) {
-
-        configurerDates(projet);
-
-    });
-
-
-/*
-|--------------------------------------------------------------------------
-| AFFICHER LES ANNÉES SELON LA FILIÈRE
-|--------------------------------------------------------------------------
-*/
-
-function afficherAnnees() {
-
-    let filiereSelectionnee =
-        document.querySelector(
-            'input[name="filiere"]:checked'
-        );
-
-
-    if (!filiereSelectionnee) {
-        return;
-    }
-
-
-    let filiere =
-        filiereSelectionnee.value;
-
-
-    let annee3 =
-        document.getElementById("annee3");
-
-
-    let radio3 =
-        document.querySelector(
-            'input[name="annee"][value="3ème année"]'
-        );
-
-
-    let radio2 =
-        document.querySelector(
-            'input[name="annee"][value="2ème année"]'
-        );
-
-
-    if (filiere === "2AP") {
-
-        /*
-        | Cacher la 3ème année
-        */
-
-        annee3.style.display =
-            "none";
-
-
-        /*
-        | Si 3ème année était sélectionnée,
-        | sélectionner automatiquement 2ème année
-        */
-
-        if (radio3.checked) {
-
-            radio3.checked = false;
-
-            radio2.checked = true;
-
-        }
-
-    } else {
-
-        /*
-        | Pour les autres filières,
-        | afficher la 3ème année
-        */
-
-        annee3.style.display =
-            "inline-flex";
-
-    }
-
-}
-
-
-/*
-|--------------------------------------------------------------------------
-| CHANGEMENT DE FILIÈRE
-|--------------------------------------------------------------------------
-*/
-
-document
-    .querySelectorAll(
-        'input[name="filiere"]'
-    )
-    .forEach(function(radio) {
-
-        radio.addEventListener(
-            "change",
-            afficherAnnees
-        );
-
-    });
-
-
-/*
-|--------------------------------------------------------------------------
-| EXÉCUTER AU CHARGEMENT
-|--------------------------------------------------------------------------
-*/
-
-afficherAnnees();
-
-
-/*
-|--------------------------------------------------------------------------
-| VALIDATION AVANT ENVOI
-|--------------------------------------------------------------------------
-*/
-
-document
-.getElementById("monFormulaire")
-.addEventListener(
-"submit",
-function(event) {
-
-
-        let datesDebut =
-            document.querySelectorAll(
-                'input[name="date_projet[]"]'
-            );
-
-        let datesFin =
-            document.querySelectorAll(
-                'input[name="date_fin[]"]'
-            );
-
-
-        for (
-            let i = 0;
-            i < datesDebut.length;
-            i++
-        ) {
-
-            if (
-                datesDebut[i].value !== "" &&
-                datesFin[i].value !== ""
-            ) {
-
-                let debut =
-                    new Date(datesDebut[i].value);
-
-                let fin =
-                    new Date(datesFin[i].value);
-
-
-                if (fin < debut) {
-
-                    alert(
-                        "Erreur dans le projet " +
-                        (i + 1) +
-                        " : la date de fin doit être après ou égale à la date de début."
-                    );
-
-                    datesFin[i].focus();
-
-                    event.preventDefault();
-
-                    return;
-
-                }
-
-            }
-
-        }
-
-    }
-);
-
-
-/*
-|--------------------------------------------------------------------------
-| EFFACER LE FORMULAIRE
-|--------------------------------------------------------------------------
-*/
-
-function effacerFormulaire() {
-
-    /*
-    | Confirmation
-    */
-
-    let confirmation =
-        confirm(
-            "Voulez-vous vraiment effacer toutes les données ?"
-        );
-
-
-    if (!confirmation) {
-        return;
-    }
-
-
-    /*
-    | Supprimer les données de session
-    */
-
-    window.location.href =
-        "formulaire.php?effacer=1";
-
-}
-
-
-
-/*
-|--------------------------------------------------------------------------
-| MODULES SELON LA FILIÈRE
-|--------------------------------------------------------------------------
-*/
+/* =========================================================
+   MODULES DE CHAQUE FILIÈRE
+   ========================================================= */
 
 const modulesParFiliere = {
 
     "2AP": [
-        "Algorithmique",
-        "Programmation",
-        "Mathématiques",
-        "Architecture des ordinateurs",
+        "Mécanique",
+        "Algèbre",
+        "Analyse",
+        "Physique",
         "Électricité"
     ],
 
@@ -1133,12 +723,11 @@ const modulesParFiliere = {
     ],
 
     "GI": [
-        "Pro Av",
         "Compilation",
-        "Réseaux",
         "Web Avancée",
         "POO",
-        "BD"
+        "BD",
+        "Pro Av"
     ],
 
     "SCM": [
@@ -1164,19 +753,75 @@ const modulesParFiliere = {
         "Comptabilité",
         "Gestion de projet"
     ]
-
 };
 
 
-/*
-|--------------------------------------------------------------------------
-| AFFICHER LES MODULES
-|--------------------------------------------------------------------------
-*/
+/* Modules déjà sélectionnés */
 
-function afficherModules() {
+let modulesSelectionnes =
+    <?= json_encode(array_values($modules)) ?>;
 
-    let filiereSelectionnee =
+
+/* Filière déjà sélectionnée */
+
+let filierePrecedente =
+    <?= json_encode($data['filiere'] ?? '') ?>;
+
+
+
+/* =========================================================
+   AFFICHER / CACHER LA 3ème ANNÉE
+   ========================================================= */
+
+function afficherAnnees()
+{
+    let filiere =
+        document.querySelector(
+            'input[name="filiere"]:checked'
+        );
+
+    let annee3 =
+        document.getElementById("annee3");
+
+    let radio3 =
+        document.querySelector(
+            'input[name="annee"][value="3ème année"]'
+        );
+
+    let radio2 =
+        document.querySelector(
+            'input[name="annee"][value="2ème année"]'
+        );
+
+
+    if (filiere && filiere.value == "2AP") {
+
+        annee3.style.display = "none";
+
+
+        if (radio3.checked) {
+
+            radio3.checked = false;
+            radio2.checked = true;
+
+        }
+
+    } else {
+
+        annee3.style.display = "";
+
+    }
+}
+
+
+
+/* =========================================================
+   AFFICHER LES MODULES
+   ========================================================= */
+
+function afficherModules()
+{
+    let filiere =
         document.querySelector(
             'input[name="filiere"]:checked'
         );
@@ -1185,30 +830,32 @@ function afficherModules() {
         document.getElementById("modules-container");
 
 
-    if (!filiereSelectionnee) {
+    container.innerHTML = "";
 
-        container.innerHTML =
-            "<p>Veuillez choisir une filière.</p>";
+
+    if (!filiere) {
+
+        container.textContent =
+            "Veuillez choisir une filière.";
 
         return;
     }
 
 
-    let filiere =
-        filiereSelectionnee.value;
+    let listeModules =
+        modulesParFiliere[filiere.value];
 
 
-    let modules =
-        modulesParFiliere[filiere] || [];
+    for (let i = 0; i < listeModules.length; i++) {
 
+        let module = listeModules[i];
 
-    container.innerHTML = "";
-
-
-    modules.forEach(function(module) {
 
         let label =
             document.createElement("label");
+
+        label.className = "choice";
+
 
         let checkbox =
             document.createElement("input");
@@ -1220,21 +867,38 @@ function afficherModules() {
         checkbox.value = module;
 
 
-        /*
-        | Vérifier si le module était déjà sélectionné
-        */
-
-        let modulesSelectionnes =
-            <?= json_encode($modules) ?>;
-
-
-        if (
-            modulesSelectionnes.includes(module)
-        ) {
-
+        if (modulesSelectionnes.includes(module)) {
             checkbox.checked = true;
-
         }
+
+
+        checkbox.addEventListener(
+            "change",
+            function()
+            {
+
+                if (checkbox.checked) {
+
+                    if (!modulesSelectionnes.includes(module)) {
+
+                        modulesSelectionnes.push(module);
+
+                    }
+
+                } else {
+
+                    modulesSelectionnes =
+                        modulesSelectionnes.filter(
+                            function(element)
+                            {
+                                return element != module;
+                            }
+                        );
+
+                }
+
+            }
+        );
 
 
         label.appendChild(checkbox);
@@ -1243,27 +907,37 @@ function afficherModules() {
             document.createTextNode(" " + module)
         );
 
-
         container.appendChild(label);
-
-    });
-
+    }
 }
 
 
-/*
-|--------------------------------------------------------------------------
-| CHANGEMENT DE FILIÈRE
-|--------------------------------------------------------------------------
-*/
 
-document
-    .querySelectorAll('input[name="filiere"]')
-    .forEach(function(radio) {
+/* Quand on change de filière */
+
+let radiosFiliere =
+    document.querySelectorAll(
+        'input[name="filiere"]'
+    );
+
+
+radiosFiliere.forEach(
+    function(radio)
+    {
 
         radio.addEventListener(
             "change",
-            function() {
+            function()
+            {
+
+                if (filierePrecedente != radio.value) {
+
+                    modulesSelectionnes = [];
+
+                    filierePrecedente = radio.value;
+
+                }
+
 
                 afficherAnnees();
 
@@ -1272,21 +946,559 @@ document
             }
         );
 
-    });
+    }
+);
 
 
-/*
-|--------------------------------------------------------------------------
-| AFFICHER LES MODULES AU CHARGEMENT
-|--------------------------------------------------------------------------
-*/
+
+/* =========================================================
+   VÉRIFICATION DES DATES
+   ========================================================= */
+
+function configurerDates(bloc)
+{
+    let debut =
+        bloc.querySelector(".date-debut");
+
+    let fin =
+        bloc.querySelector(".date-fin");
+
+
+    function verifierDate()
+    {
+
+        if (debut.value == "") {
+
+            fin.removeAttribute("min");
+
+            return;
+        }
+
+
+        let date =
+            new Date(debut.value);
+
+        date.setDate(
+            date.getDate() + 1
+        );
+
+
+        let annee =
+            date.getFullYear();
+
+        let mois =
+            String(
+                date.getMonth() + 1
+            ).padStart(2, "0");
+
+        let jour =
+            String(
+                date.getDate()
+            ).padStart(2, "0");
+
+
+        fin.min =
+            annee + "-" + mois + "-" + jour;
+
+
+        if (
+            fin.value != "" &&
+            fin.value <= debut.value
+        ) {
+
+            fin.value = "";
+
+        }
+
+    }
+
+
+    debut.addEventListener(
+        "change",
+        verifierDate
+    );
+
+
+    fin.addEventListener(
+        "change",
+        function()
+        {
+
+            if (
+                debut.value != "" &&
+                fin.value != "" &&
+                fin.value <= debut.value
+            ) {
+
+                alert(
+                    "La date de fin doit être strictement postérieure à la date de début."
+                );
+
+                fin.value = "";
+
+            }
+
+        }
+    );
+
+
+    verifierDate();
+}
+
+
+
+/* =========================================================
+   RENUMÉROTATION
+   ========================================================= */
+
+function renumeroterProjets()
+{
+    let projets =
+        document.querySelectorAll(
+            "#projets .projet"
+        );
+
+
+    for (let i = 0; i < projets.length; i++) {
+
+        projets[i].querySelector("h3").textContent =
+            "Projet " + (i + 1);
+
+    }
+}
+
+
+function renumeroterStages()
+{
+    let stages =
+        document.querySelectorAll(
+            "#stages .stage"
+        );
+
+
+    for (let i = 0; i < stages.length; i++) {
+
+        stages[i].querySelector("h3").textContent =
+            "Stage " + (i + 1);
+
+    }
+}
+
+
+
+/* =========================================================
+   METTRE À JOUR LE SELECT DU NOMBRE DE PROJETS
+   ========================================================= */
+
+function actualiserNombreProjets()
+{
+    let projets =
+        document.querySelectorAll(
+            "#projets .projet"
+        );
+
+
+    let nombre =
+        projets.length;
+
+
+    let select =
+        document.getElementById("nombre");
+
+
+    if (nombre > 5) {
+
+        select.value = "plus de 5";
+
+    } else {
+
+        select.value =
+            String(nombre);
+
+    }
+}
+
+
+
+/* =========================================================
+   AJOUTER UN PROJET
+   ========================================================= */
+
+function ajouterProjet()
+{
+    let div =
+        document.createElement("div");
+
+
+    div.className =
+        "repeat-card projet";
+
+
+    div.innerHTML = `
+
+        <h3>Projet</h3>
+
+        <label>Nom du projet :</label>
+
+        <input
+            type="text"
+            name="nom_projet[]"
+        >
+
+
+        <label>Date de début :</label>
+
+        <input
+            type="date"
+            class="date-debut"
+            name="date_projet[]"
+        >
+
+
+        <label>Date de fin :</label>
+
+        <input
+            type="date"
+            class="date-fin"
+            name="date_fin[]"
+        >
+
+
+        <label>Lieu :</label>
+
+        <input
+            type="text"
+            name="lieu[]"
+        >
+
+
+        <label>Description :</label>
+
+        <textarea
+            name="description[]"
+        ></textarea>
+
+    `;
+
+
+    document
+        .getElementById("projets")
+        .appendChild(div);
+
+
+    configurerDates(div);
+
+    renumeroterProjets();
+
+    actualiserNombreProjets();
+}
+
+
+
+/* Bouton ajouter projet */
+
+document
+    .getElementById("ajouterProjet")
+    .addEventListener(
+        "click",
+        ajouterProjet
+    );
+
+
+
+/* =========================================================
+   CHANGEMENT DU NOMBRE DE PROJETS
+   ========================================================= */
+
+document
+    .getElementById("nombre")
+    .addEventListener(
+        "change",
+        function()
+        {
+
+            let cible;
+
+
+            if (this.value == "plus de 5") {
+
+                cible = 6;
+
+            } else {
+
+                cible =
+                    parseInt(
+                        this.value
+                    );
+
+            }
+
+
+            let projets =
+                document.querySelectorAll(
+                    "#projets .projet"
+                );
+
+
+            let total =
+                projets.length;
+
+
+            /* Ajouter */
+
+            while (total < cible) {
+
+                ajouterProjet();
+
+                total++;
+
+            }
+
+
+            /* Supprimer */
+
+            while (total > cible) {
+
+                let projets =
+                    document.querySelectorAll(
+                        "#projets .projet"
+                    );
+
+
+                projets[
+                    projets.length - 1
+                ].remove();
+
+
+                total--;
+
+            }
+
+
+            renumeroterProjets();
+
+            actualiserNombreProjets();
+
+        }
+    );
+
+
+
+/* =========================================================
+   AJOUTER UN STAGE
+   ========================================================= */
+
+function ajouterStage()
+{
+    let div =
+        document.createElement("div");
+
+
+    div.className =
+        "repeat-card stage";
+
+
+    div.innerHTML = `
+
+        <h3>Stage</h3>
+
+        <label>Nom du stage :</label>
+
+        <input
+            type="text"
+            name="nom_stage[]"
+        >
+
+
+        <label>Date de début :</label>
+
+        <input
+            type="date"
+            class="date-debut"
+            name="date_debut_stage[]"
+        >
+
+
+        <label>Date de fin :</label>
+
+        <input
+            type="date"
+            class="date-fin"
+            name="date_fin_stage[]"
+        >
+
+
+        <label>Lieu :</label>
+
+        <input
+            type="text"
+            name="lieu_stage[]"
+        >
+
+
+        <label>Description :</label>
+
+        <textarea
+            name="description_stage[]"
+        ></textarea>
+
+    `;
+
+
+    document
+        .getElementById("stages")
+        .appendChild(div);
+
+
+    configurerDates(div);
+
+    renumeroterStages();
+}
+
+
+
+/* Bouton ajouter stage */
+
+document
+    .getElementById("ajouterStage")
+    .addEventListener(
+        "click",
+        ajouterStage
+    );
+
+
+
+/* Configurer les dates des blocs déjà présents */
+
+let blocs =
+    document.querySelectorAll(
+        ".projet, .stage"
+    );
+
+
+blocs.forEach(
+    function(bloc)
+    {
+        configurerDates(bloc);
+    }
+);
+
+
+
+/* =========================================================
+   VÉRIFICATION AVANT L'ENVOI
+   ========================================================= */
+
+document
+    .getElementById("monFormulaire")
+    .addEventListener(
+        "submit",
+        function(event)
+        {
+
+            let blocs =
+                document.querySelectorAll(
+                    ".projet, .stage"
+                );
+
+
+            for (
+                let i = 0;
+                i < blocs.length;
+                i++
+            ) {
+
+                let debut =
+                    blocs[i]
+                        .querySelector(".date-debut")
+                        .value;
+
+
+                let fin =
+                    blocs[i]
+                        .querySelector(".date-fin")
+                        .value;
+
+
+                /* Une seule date remplie */
+
+                if (
+                    (debut != "" && fin == "") ||
+                    (debut == "" && fin != "")
+                ) {
+
+                    alert(
+                        "Veuillez remplir les deux dates ou laisser les deux vides."
+                    );
+
+
+                    event.preventDefault();
+
+                    return;
+                }
+
+
+                /* Fin avant ou égale au début */
+
+                if (
+                    debut != "" &&
+                    fin != "" &&
+                    fin <= debut
+                ) {
+
+                    alert(
+                        "La date de fin doit être strictement postérieure à la date de début."
+                    );
+
+
+                    event.preventDefault();
+
+                    return;
+                }
+
+            }
+
+        }
+    );
+
+
+
+/* =========================================================
+   BOUTON EFFACER
+   ========================================================= */
+
+document
+    .getElementById("effacer")
+    .addEventListener(
+        "click",
+        function()
+        {
+
+            let confirmation =
+                confirm(
+                    "Voulez-vous vraiment effacer toutes les données ?"
+                );
+
+
+            if (confirmation) {
+
+                window.location.href =
+                    "formulaire.php?effacer=1";
+
+            }
+
+        }
+    );
+
+
+
+/* Affichage initial */
+
+afficherAnnees();
 
 afficherModules();
 
-
 </script>
 
-
 </body>
-
 </html>

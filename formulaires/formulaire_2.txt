@@ -1,0 +1,50 @@
+========================================
+FICHE DE RENSEIGNEMENTS
+========================================
+
+RENSEIGNEMENTS PERSONNELS
+-------------------------
+Nom : bendhman
+Prénom : amina
+Âge : 20
+Téléphone : 0636987845
+Email : amina@gmail.com
+
+RENSEIGNEMENTS ACADÉMIQUES
+--------------------------
+Filière : GSTR
+Année : 1ère année
+Nombre de projets : 3
+Modules : Télécommunications
+
+PROJETS RÉALISÉS
+----------------
+
+Projet 1
+Nom : ao
+Date de début : 
+Date de fin : 
+Lieu : 
+Description : 
+
+Projet 2
+Nom : gestion dequipe
+Date de début : 
+Date de fin : 
+Lieu : 
+Description : 
+
+STAGES RÉALISÉS
+---------------
+Aucun stage renseigné.
+
+AUTRES INFORMATIONS
+-------------------
+Centres d'intérêt : 
+Compétences : 
+Langues : 
+Remarques : 
+Fichier transmis : emails.txt
+
+Date d'enregistrement : 29/09/2026 00:12:22
+========================================

@@ -3,178 +3,285 @@
 session_start();
 
 
-/*
-|--------------------------------------------------------------------------
-| VÉRIFIER QUE LE FORMULAIRE A ÉTÉ ENVOYÉ
-|--------------------------------------------------------------------------
-*/
+/* =========================================================
+   1. RÉCUPÉRER LES DONNÉES
+   ========================================================= */
 
-if ($_SERVER["REQUEST_METHOD"] !== "POST") {
+if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 
-    header("Location: formulaire.php");
+    /* Données envoyées par formulaire.php */
+
+    $data = $_POST;
+
+
+    /* Récupérer les anciennes données */
+
+    $ancienneDonnee =
+        $_SESSION['formulaire'] ?? [];
+
+
+    /* =====================================================
+       2. GESTION DU FICHIER
+       ===================================================== */
+
+    /*
+       Si aucun nouveau fichier n'est choisi,
+       on garde l'ancien fichier.
+    */
+
+    $data['fichier_nom'] =
+        $ancienneDonnee['fichier_nom'] ?? '';
+
+    $data['fichier_stocke'] =
+        $ancienneDonnee['fichier_stocke'] ?? '';
+
+
+    /*
+       Vérifier si un fichier a été envoyé
+    */
+
+    if (
+        isset($_FILES['fichier']) &&
+        $_FILES['fichier']['error'] != UPLOAD_ERR_NO_FILE
+    ) {
+
+        /* Vérifier s'il y a une erreur */
+
+        if (
+            $_FILES['fichier']['error'] != UPLOAD_ERR_OK
+        ) {
+
+            die("Erreur lors du téléchargement du fichier.");
+
+        }
+
+
+        /* Dossier où le fichier sera enregistré */
+
+        $dossierUpload =
+            __DIR__ . '/uploads';
+
+
+        /*
+           Créer le dossier s'il n'existe pas
+        */
+
+        if (!is_dir($dossierUpload)) {
+
+            if (!mkdir($dossierUpload, 0755, true)) {
+
+                die(
+                    "Impossible de créer le dossier uploads."
+                );
+
+            }
+
+        }
+
+
+        /* Nom original */
+
+        $nomOriginal =
+            basename(
+                $_FILES['fichier']['name']
+            );
+
+
+        /*
+           Remplacer les caractères problématiques
+           par _
+        */
+
+        $nomSecurise =
+            preg_replace(
+                '/[^A-Za-z0-9._-]/',
+                '_',
+                $nomOriginal
+            );
+
+
+        /*
+           Donner un nom unique au fichier
+           pour éviter les conflits
+        */
+
+        $nomStocke =
+            uniqid() . '_' . $nomSecurise;
+
+
+        $destination =
+            $dossierUpload . '/' . $nomStocke;
+
+
+        /* Déplacer le fichier */
+
+        if (
+            !move_uploaded_file(
+                $_FILES['fichier']['tmp_name'],
+                $destination
+            )
+        ) {
+
+            die(
+                "Impossible d'enregistrer le fichier."
+            );
+
+        }
+
+
+        /*
+           Supprimer l'ancien fichier
+           s'il existait
+        */
+
+        $ancienFichier =
+            $ancienneDonnee['fichier_stocke'] ?? '';
+
+
+        if (
+            $ancienFichier != '' &&
+            is_file(__DIR__ . '/' . $ancienFichier)
+        ) {
+
+            unlink(
+                __DIR__ . '/' . $ancienFichier
+            );
+
+        }
+
+
+        /*
+           Enregistrer les informations du nouveau fichier
+        */
+
+        $data['fichier_nom'] =
+            $nomOriginal;
+
+        $data['fichier_stocke'] =
+            'uploads/' . $nomStocke;
+
+    }
+
+
+    /*
+       Sauvegarder toutes les données
+       dans la session
+    */
+
+    $_SESSION['formulaire'] =
+        $data;
+
+
+} elseif (isset($_SESSION['formulaire'])) {
+
+    /*
+       Si on arrive sur recap.php sans POST,
+       mais que la session existe,
+       on utilise les données de la session.
+    */
+
+    $data =
+        $_SESSION['formulaire'];
+
+
+} else {
+
+    /*
+       Aucune donnée :
+       retour au formulaire
+    */
+
+    header('Location: formulaire.php');
 
     exit;
 }
 
 
-/*
-|--------------------------------------------------------------------------
-| ENREGISTRER LES DONNÉES DANS LA SESSION
-|--------------------------------------------------------------------------
-*/
 
-$_SESSION['formulaire'] = $_POST;
+/* =========================================================
+   3. FONCTION POUR AFFICHER LES DONNÉES
+   ========================================================= */
 
-
-/*
-|--------------------------------------------------------------------------
-| INFORMATIONS PERSONNELLES
-|--------------------------------------------------------------------------
-*/
-
-$nom =
-    $_POST['nom'] ?? '';
-
-$prenom =
-    $_POST['prenom'] ?? '';
-
-$age =
-    $_POST['age'] ?? '';
-
-$telephone =
-    $_POST['numero_telephone'] ?? '';
-
-$email =
-    $_POST['email'] ?? '';
+function h($value)
+{
+    return htmlspecialchars(
+        (string)$value,
+        ENT_QUOTES,
+        'UTF-8'
+    );
+}
 
 
-/*
-|--------------------------------------------------------------------------
-| INFORMATIONS ACADÉMIQUES
-|--------------------------------------------------------------------------
-*/
 
-$filiere =
-    $_POST['filiere'] ?? '';
-
-$annee =
-    $_POST['annee'] ?? '';
-
-$nombre =
-    $_POST['nombre'] ?? '';
-
-
-/*
-|--------------------------------------------------------------------------
-| MODULES
-|--------------------------------------------------------------------------
-*/
+/* =========================================================
+   4. RÉCUPÉRER LES TABLEAUX
+   ========================================================= */
 
 $modules =
-    $_POST['modules'] ?? [];
-
+    $data['modules'] ?? [];
 
 if (!is_array($modules)) {
-
     $modules = [];
-
 }
 
 
-/*
-|--------------------------------------------------------------------------
-| PROJETS
-|--------------------------------------------------------------------------
-*/
+/* Projets */
 
 $nom_projets =
-    $_POST['nom_projet'] ?? [];
+    $data['nom_projet'] ?? [];
 
 $dates_debut =
-    $_POST['date_projet'] ?? [];
+    $data['date_projet'] ?? [];
 
 $dates_fin =
-    $_POST['date_fin'] ?? [];
+    $data['date_fin'] ?? [];
 
 $lieux =
-    $_POST['lieu'] ?? [];
+    $data['lieu'] ?? [];
 
 $descriptions =
-    $_POST['description'] ?? [];
+    $data['description'] ?? [];
+
+
+/* Stages */
+
+$nom_stages =
+    $data['nom_stage'] ?? [];
+
+$dates_debut_stages =
+    $data['date_debut_stage'] ?? [];
+
+$dates_fin_stages =
+    $data['date_fin_stage'] ?? [];
+
+$lieux_stages =
+    $data['lieu_stage'] ?? [];
+
+$descriptions_stages =
+    $data['description_stage'] ?? [];
 
 
 /*
-|--------------------------------------------------------------------------
-| SÉCURITÉ : vérifier les tableaux
-|--------------------------------------------------------------------------
+   Si quelque chose n'est pas un tableau,
+   on le transforme en tableau vide.
 */
 
-if (!is_array($nom_projets)) {
-    $nom_projets = [];
-}
+if (!is_array($nom_projets)) $nom_projets = [];
+if (!is_array($dates_debut)) $dates_debut = [];
+if (!is_array($dates_fin)) $dates_fin = [];
+if (!is_array($lieux)) $lieux = [];
+if (!is_array($descriptions)) $descriptions = [];
 
-if (!is_array($dates_debut)) {
-    $dates_debut = [];
-}
-
-if (!is_array($dates_fin)) {
-    $dates_fin = [];
-}
-
-if (!is_array($lieux)) {
-    $lieux = [];
-}
-
-if (!is_array($descriptions)) {
-    $descriptions = [];
-}
-
-
-/*
-|--------------------------------------------------------------------------
-| AUTRES INFORMATIONS
-|--------------------------------------------------------------------------
-*/
-
-$centre_interet =
-    $_POST['centre_interet'] ?? '';
-
-$competences =
-    $_POST['competences'] ?? '';
-
-$langues =
-    $_POST['langues'] ?? '';
-
-$remarques =
-    $_POST['remarques'] ?? '';
-
-
-/*
-|--------------------------------------------------------------------------
-| FICHIER
-|--------------------------------------------------------------------------
-*/
-
-$nom_fichier = '';
-
-
-if (
-    isset($_FILES['fichier']) &&
-    $_FILES['fichier']['error'] === UPLOAD_ERR_OK
-) {
-
-    $nom_fichier =
-        $_FILES['fichier']['name'];
-
-}
+if (!is_array($nom_stages)) $nom_stages = [];
+if (!is_array($dates_debut_stages)) $dates_debut_stages = [];
+if (!is_array($dates_fin_stages)) $dates_fin_stages = [];
+if (!is_array($lieux_stages)) $lieux_stages = [];
+if (!is_array($descriptions_stages)) $descriptions_stages = [];
 
 ?>
 
-
 <!DOCTYPE html>
-
 <html lang="fr">
-
 
 <head>
 
@@ -187,665 +294,524 @@ if (
 
     <title>Récapitulatif</title>
 
-
-    <style>
-
-
-        * {
-            box-sizing: border-box;
-        }
-
-
-        body {
-
-            font-family:
-                Arial,
-                sans-serif;
-
-            background:
-                linear-gradient(
-                    135deg,
-                    #eef2f7,
-                    #dce6f2
-                );
-
-            margin: 0;
-
-            padding: 30px;
-
-            color: #333;
-
-        }
-
-
-        .container {
-
-            max-width: 900px;
-
-            margin: auto;
-
-            background: white;
-
-            padding: 35px;
-
-            border-radius: 15px;
-
-            box-shadow:
-                0 5px 20px
-                rgba(0,0,0,0.1);
-
-        }
-
-
-        h1 {
-
-            text-align: center;
-
-            color: #1d3557;
-
-            margin-bottom: 35px;
-
-        }
-
-
-        h2 {
-
-            color: #0066cc;
-
-            border-bottom:
-                2px solid #0066cc;
-
-            padding-bottom: 8px;
-
-            margin-top: 30px;
-
-        }
-
-
-        h3 {
-
-            color: #333;
-
-        }
-
-
-        .information {
-
-            background: #f7f9fc;
-
-            padding: 12px;
-
-            margin:
-                8px 0;
-
-            border-radius: 6px;
-
-        }
-
-
-        .information strong {
-
-            color: #222;
-
-        }
-
-
-        ul {
-
-            background: #f7f9fc;
-
-            padding: 20px 40px;
-
-            border-radius: 8px;
-
-        }
-
-
-        .projet {
-
-            border:
-                1px solid #d5dce5;
-
-            padding: 20px;
-
-            margin-bottom: 20px;
-
-            border-radius: 10px;
-
-            background:
-                #fafcff;
-
-        }
-
-
-        .projet h3 {
-
-            margin-top: 0;
-
-            color: #0066cc;
-
-        }
-
-
-        .projet p {
-
-            line-height: 1.6;
-
-        }
-
-
-        .buttons {
-
-            text-align: center;
-
-            margin-top: 35px;
-
-        }
-
-
-        button {
-
-            border: none;
-
-            padding:
-                12px 25px;
-
-            margin: 5px;
-
-            border-radius: 6px;
-
-            cursor: pointer;
-
-            font-size: 16px;
-
-        }
-
-
-        .modifier {
-
-            background:
-                #f39c12;
-
-            color: white;
-
-        }
-
-
-        .modifier:hover {
-
-            background:
-                #d68910;
-
-        }
-
-
-        .valider {
-
-            background:
-                #28a745;
-
-            color: white;
-
-        }
-
-
-        .valider:hover {
-
-            background:
-                #218838;
-
-        }
-
-
-    </style>
+    <link rel="stylesheet" href="style.css">
 
 </head>
 
 
 <body>
 
-
-<div class="container">
-
-
-<h1>
-    Fiche de renseignements
-</h1>
+<div class="recap-container">
 
 
-<!-- =========================================================
-     INFORMATIONS PERSONNELLES
-========================================================= -->
-
-<h2>
-    Renseignements personnels
-</h2>
+    <h1>Récapitulatif de la fiche</h1>
 
 
-<div class="information">
+    <!-- =====================================================
+         INFORMATIONS PERSONNELLES
+         ===================================================== -->
 
-    <strong>
-        Nom :
-    </strong>
+    <section>
 
-    <?= htmlspecialchars($nom) ?>
+        <h2>Renseignements personnels</h2>
+
+
+        <div class="information">
+
+            <strong>Nom :</strong>
+
+            <?= h($data['nom'] ?? '') ?>
+
+        </div>
+
+
+        <div class="information">
+
+            <strong>Prénom :</strong>
+
+            <?= h($data['prenom'] ?? '') ?>
+
+        </div>
+
+
+        <div class="information">
+
+            <strong>Âge :</strong>
+
+            <?= h($data['age'] ?? '') ?>
+
+        </div>
+
+
+        <div class="information">
+
+            <strong>Numéro de téléphone :</strong>
+
+            <?= h($data['numero_telephone'] ?? '') ?>
+
+        </div>
+
+
+        <div class="information">
+
+            <strong>Email :</strong>
+
+            <?= h($data['email'] ?? '') ?>
+
+        </div>
+
+    </section>
+
+
+
+    <!-- =====================================================
+         INFORMATIONS ACADÉMIQUES
+         ===================================================== -->
+
+    <section>
+
+        <h2>Renseignements académiques</h2>
+
+
+        <div class="information">
+
+            <strong>Filière :</strong>
+
+            <?= h($data['filiere'] ?? '') ?>
+
+        </div>
+
+
+        <div class="information">
+
+            <strong>Année :</strong>
+
+            <?= h($data['annee'] ?? '') ?>
+
+        </div>
+
+
+        <div class="information">
+
+            <strong>Nombre de projets :</strong>
+
+            <?= h($data['nombre'] ?? '') ?>
+
+        </div>
+
+
+        <h3>Modules suivis cette année</h3>
+
+
+        <?php if (count($modules) > 0): ?>
+
+            <ul>
+
+                <?php foreach ($modules as $module): ?>
+
+                    <li>
+                        <?= h($module) ?>
+                    </li>
+
+                <?php endforeach; ?>
+
+            </ul>
+
+        <?php else: ?>
+
+            <p class="muted">
+                Aucun module sélectionné.
+            </p>
+
+        <?php endif; ?>
+
+    </section>
+
+
+
+    <!-- =====================================================
+         PROJETS
+         ===================================================== -->
+
+    <section>
+
+        <h2>Projets réalisés</h2>
+
+
+        <?php
+
+        $numeroProjet = 0;
+
+
+        for (
+            $i = 0;
+            $i < count($nom_projets);
+            $i++
+        ) {
+
+
+            $nom =
+                $nom_projets[$i] ?? '';
+
+            $debut =
+                $dates_debut[$i] ?? '';
+
+            $fin =
+                $dates_fin[$i] ?? '';
+
+            $lieu =
+                $lieux[$i] ?? '';
+
+            $description =
+                $descriptions[$i] ?? '';
+
+
+            /*
+               Vérifier si le projet contient
+               au moins une information.
+            */
+
+            if (
+                trim(
+                    $nom .
+                    $debut .
+                    $fin .
+                    $lieu .
+                    $description
+                ) == ''
+            ) {
+
+                continue;
+
+            }
+
+
+            $numeroProjet++;
+
+        ?>
+
+
+            <div class="repeat-card">
+
+
+                <h3>
+                    Projet <?= $numeroProjet ?>
+                </h3>
+
+
+                <p>
+
+                    <strong>Nom :</strong>
+
+                    <?= h($nom) ?>
+
+                </p>
+
+
+                <p>
+
+                    <strong>Date de début :</strong>
+
+                    <?= h($debut) ?>
+
+                </p>
+
+
+                <p>
+
+                    <strong>Date de fin :</strong>
+
+                    <?= h($fin) ?>
+
+                </p>
+
+
+                <p>
+
+                    <strong>Lieu :</strong>
+
+                    <?= h($lieu) ?>
+
+                </p>
+
+
+                <p>
+
+                    <strong>Description :</strong>
+                    <br>
+
+                    <?= nl2br(h($description)) ?>
+
+                </p>
+
+
+            </div>
+
+
+        <?php
+
+        }
+
+
+        if ($numeroProjet == 0):
+
+        ?>
+
+            <p class="muted">
+                Aucun projet renseigné.
+            </p>
+
+        <?php endif; ?>
+
+    </section>
+
+
+
+    <!-- =====================================================
+         STAGES
+         ===================================================== -->
+
+    <section>
+
+        <h2>Stages réalisés</h2>
+
+
+        <?php
+
+        $numeroStage = 0;
+
+
+        for (
+            $i = 0;
+            $i < count($nom_stages);
+            $i++
+        ) {
+
+
+            $nom =
+                $nom_stages[$i] ?? '';
+
+            $debut =
+                $dates_debut_stages[$i] ?? '';
+
+            $fin =
+                $dates_fin_stages[$i] ?? '';
+
+            $lieu =
+                $lieux_stages[$i] ?? '';
+
+            $description =
+                $descriptions_stages[$i] ?? '';
+
+
+            /*
+               Vérifier si le stage contient
+               au moins une information.
+            */
+
+            if (
+                trim(
+                    $nom .
+                    $debut .
+                    $fin .
+                    $lieu .
+                    $description
+                ) == ''
+            ) {
+
+                continue;
+
+            }
+
+
+            $numeroStage++;
+
+        ?>
+
+
+            <div class="repeat-card">
+
+
+                <h3>
+                    Stage <?= $numeroStage ?>
+                </h3>
+
+
+                <p>
+
+                    <strong>Nom :</strong>
+
+                    <?= h($nom) ?>
+
+                </p>
+
+
+                <p>
+
+                    <strong>Date de début :</strong>
+
+                    <?= h($debut) ?>
+
+                </p>
+
+
+                <p>
+
+                    <strong>Date de fin :</strong>
+
+                    <?= h($fin) ?>
+
+                </p>
+
+
+                <p>
+
+                    <strong>Lieu :</strong>
+
+                    <?= h($lieu) ?>
+
+                </p>
+
+
+                <p>
+
+                    <strong>Description :</strong>
+                    <br>
+
+                    <?= nl2br(h($description)) ?>
+
+                </p>
+
+
+            </div>
+
+
+        <?php
+
+        }
+
+
+        if ($numeroStage == 0):
+
+        ?>
+
+            <p class="muted">
+                Aucun stage renseigné.
+            </p>
+
+        <?php endif; ?>
+
+    </section>
+
+
+
+    <!-- =====================================================
+         AUTRES INFORMATIONS
+         ===================================================== -->
+
+    <section>
+
+        <h2>Autres informations</h2>
+
+
+        <div class="information">
+
+            <strong>Centres d'intérêt :</strong>
+            <br>
+
+            <?= nl2br(
+                h($data['centre_interet'] ?? '')
+            ) ?>
+
+        </div>
+
+
+        <div class="information">
+
+            <strong>Compétences :</strong>
+            <br>
+
+            <?= nl2br(
+                h($data['competences'] ?? '')
+            ) ?>
+
+        </div>
+
+
+        <div class="information">
+
+            <strong>Langues :</strong>
+            <br>
+
+            <?= nl2br(
+                h($data['langues'] ?? '')
+            ) ?>
+
+        </div>
+
+
+        <div class="information">
+
+            <strong>Remarques :</strong>
+            <br>
+
+            <?= nl2br(
+                h($data['remarques'] ?? '')
+            ) ?>
+
+        </div>
+
+
+        <div class="information">
+
+            <strong>Fichier :</strong>
+
+            <?= h(
+                $data['fichier_nom']
+                ?? 'Aucun fichier envoyé'
+            ) ?>
+
+        </div>
+
+    </section>
+
+
+
+    <!-- =====================================================
+         BOUTONS
+         ===================================================== -->
+
+    <div class="buttons">
+
+
+        <a
+            class="button-link btn-modifier"
+            href="formulaire.php"
+        >
+            Modifier
+        </a>
+
+
+        <form
+            action="valider.php"
+            method="POST"
+            class="inline-form"
+        >
+
+            <button
+                type="submit"
+                class="btn-submit"
+            >
+                Valider
+            </button>
+
+        </form>
+
+
+    </div>
+
 
 </div>
-
-
-<div class="information">
-
-    <strong>
-        Prénom :
-    </strong>
-
-    <?= htmlspecialchars($prenom) ?>
-
-</div>
-
-
-<div class="information">
-
-    <strong>
-        Âge :
-    </strong>
-
-    <?= htmlspecialchars($age) ?>
-
-</div>
-
-
-<div class="information">
-
-    <strong>
-        Numéro de téléphone :
-    </strong>
-
-    <?= htmlspecialchars($telephone) ?>
-
-</div>
-
-
-<div class="information">
-
-    <strong>
-        Email :
-    </strong>
-
-    <?= htmlspecialchars($email) ?>
-
-</div>
-
-
-<!-- =========================================================
-     INFORMATIONS ACADÉMIQUES
-========================================================= -->
-
-<h2>
-    Renseignements académiques
-</h2>
-
-
-<div class="information">
-
-    <strong>
-        Filière :
-    </strong>
-
-    <?= htmlspecialchars($filiere) ?>
-
-</div>
-
-
-<div class="information">
-
-    <strong>
-        Année :
-    </strong>
-
-    <?= htmlspecialchars($annee) ?>
-
-</div>
-
-
-<div class="information">
-
-    <strong>
-        Nombre de projets :
-    </strong>
-
-    <?= htmlspecialchars($nombre) ?>
-
-</div>
-
-
-<h3>
-    Modules suivis cette année
-</h3>
-
-
-<?php if (!empty($modules)): ?>
-
-
-<ul>
-
-<?php foreach ($modules as $module): ?>
-
-    <li>
-
-        <?= htmlspecialchars($module) ?>
-
-    </li>
-
-<?php endforeach; ?>
-
-</ul>
-
-
-<?php else: ?>
-
-
-<p>
-    Aucun module sélectionné.
-</p>
-
-
-<?php endif; ?>
-
-
-<!-- =========================================================
-     PROJETS
-========================================================= -->
-
-<h2>
-    Projets réalisés
-</h2>
-
-
-<?php
-
-$nombre_projets =
-    count($nom_projets);
-
-?>
-
-
-<?php if ($nombre_projets > 0): ?>
-
-
-<?php for (
-    $i = 0;
-    $i < $nombre_projets;
-    $i++
-): ?>
-
-
-<div class="projet">
-
-
-<h3>
-    Projet <?= $i + 1 ?>
-</h3>
-
-
-<p>
-
-    <strong>
-        Nom du projet :
-    </strong>
-
-    <?= htmlspecialchars(
-        $nom_projets[$i] ?? ''
-    ) ?>
-
-</p>
-
-
-<p>
-
-    <strong>
-        Date de début :
-    </strong>
-
-    <?= htmlspecialchars(
-        $dates_debut[$i] ?? ''
-    ) ?>
-
-</p>
-
-
-<p>
-
-    <strong>
-        Date de fin :
-    </strong>
-
-    <?= htmlspecialchars(
-        $dates_fin[$i] ?? ''
-    ) ?>
-
-</p>
-
-
-<p>
-
-    <strong>
-        Lieu :
-    </strong>
-
-    <?= htmlspecialchars(
-        $lieux[$i] ?? ''
-    ) ?>
-
-</p>
-
-
-<p>
-
-    <strong>
-        Description :
-    </strong>
-
-    <br>
-
-
-    <?= nl2br(
-        htmlspecialchars(
-            $descriptions[$i] ?? ''
-        )
-    ) ?>
-
-</p>
-
-
-</div>
-
-
-<?php endfor; ?>
-
-
-<?php else: ?>
-
-
-<p>
-    Aucun projet renseigné.
-</p>
-
-
-<?php endif; ?>
-
-
-<!-- =========================================================
-     CENTRE D'INTÉRÊT
-========================================================= -->
-
-<h2>
-    Centres d'intérêt
-</h2>
-
-
-<p>
-
-<?= nl2br(
-    htmlspecialchars(
-        $centre_interet
-    )
-) ?>
-
-</p>
-
-
-<!-- =========================================================
-     COMPÉTENCES
-========================================================= -->
-
-<h2>
-    Compétences
-</h2>
-
-
-<p>
-
-<?= nl2br(
-    htmlspecialchars(
-        $competences
-    )
-) ?>
-
-</p>
-
-
-<!-- =========================================================
-     LANGUES
-========================================================= -->
-
-<h2>
-    Langues
-</h2>
-
-
-<p>
-
-<?= nl2br(
-    htmlspecialchars(
-        $langues
-    )
-) ?>
-
-</p>
-
-
-<!-- =========================================================
-     REMARQUES
-========================================================= -->
-
-<h2>
-    Vos remarques
-</h2>
-
-
-<p>
-
-<?= nl2br(
-    htmlspecialchars(
-        $remarques
-    )
-) ?>
-
-</p>
-
-
-<!-- =========================================================
-     FICHIER
-========================================================= -->
-
-<h2>
-    Fichier
-</h2>
-
-
-<?php if ($nom_fichier !== ''): ?>
-
-
-<p>
-
-    Fichier reçu :
-
-    <strong>
-        <?= htmlspecialchars($nom_fichier) ?>
-    </strong>
-
-</p>
-
-
-<?php else: ?>
-
-
-<p>
-    Aucun fichier envoyé.
-</p>
-
-
-<?php endif; ?>
-
-
-<!-- =========================================================
-     BOUTONS
-========================================================= -->
-
-<div class="buttons">
-
-
-<!-- MODIFIER -->
-
-<form
-    action="formulaire.php"
-    method="GET"
-    style="display:inline;"
->
-
-
-<button
-    type="submit"
-    class="modifier"
->
-
-    Modifier
-
-</button>
-
-
-</form>
-
-
-<!-- VALIDER -->
-
-<form
-    action="valider.php"
-    method="POST"
-    style="display:inline;"
->
-
-
-<button
-    type="submit"
-    class="valider"
->
-
-    Valider
-
-</button>
-
-
-</form>
-
-
-</div>
-
-
-</div>
-
 
 </body>
-
 </html>
