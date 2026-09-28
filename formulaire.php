@@ -379,97 +379,15 @@ if ($nombre_projets == 0) {
      MODULES
 ========================================================= -->
 
+
 <h2>Modules suivis cette année</h2>
 
+<div class="checkbox-group" id="modules-container">
 
-<div class="checkbox-group">
-
-
-<label>
-
-    <input
-        type="checkbox"
-        name="modules[]"
-        value="Pro Av"
-        <?= in_array('Pro Av', $modules) ? 'checked' : '' ?>
-    >
-
-    Pro Av
-
-</label>
-
-
-<label>
-
-    <input
-        type="checkbox"
-        name="modules[]"
-        value="Compilation"
-        <?= in_array('Compilation', $modules) ? 'checked' : '' ?>
-    >
-
-    Compilation
-
-</label>
-
-
-<label>
-
-    <input
-        type="checkbox"
-        name="modules[]"
-        value="Réseaux"
-        <?= in_array('Réseaux', $modules) ? 'checked' : '' ?>
-    >
-
-    Réseaux
-
-</label>
-
-
-<label>
-
-    <input
-        type="checkbox"
-        name="modules[]"
-        value="Web Avancée"
-        <?= in_array('Web Avancée', $modules) ? 'checked' : '' ?>
-    >
-
-    Web Avancée
-
-</label>
-
-
-<label>
-
-    <input
-        type="checkbox"
-        name="modules[]"
-        value="POO"
-        <?= in_array('POO', $modules) ? 'checked' : '' ?>
-    >
-
-    POO
-
-</label>
-
-
-<label>
-
-    <input
-        type="checkbox"
-        name="modules[]"
-        value="BD"
-        <?= in_array('BD', $modules) ? 'checked' : '' ?>
-    >
-
-    BD
-
-</label>
-
+    <!-- Les modules seront affichés ici selon la filière -->
 
 </div>
+
 
 
 <!-- =========================================================
@@ -1165,6 +1083,184 @@ function effacerFormulaire() {
         "formulaire.php?effacer=1";
 
 }
+
+
+
+/*
+|--------------------------------------------------------------------------
+| MODULES SELON LA FILIÈRE
+|--------------------------------------------------------------------------
+*/
+
+const modulesParFiliere = {
+
+    "2AP": [
+        "Algorithmique",
+        "Programmation",
+        "Mathématiques",
+        "Architecture des ordinateurs",
+        "Électricité"
+    ],
+
+    "GSTR": [
+        "Réseaux",
+        "Télécommunications",
+        "Systèmes d'exploitation",
+        "Architecture des réseaux",
+        "Transmission"
+    ],
+
+    "GI": [
+        "Pro Av",
+        "Compilation",
+        "Réseaux",
+        "Web Avancée",
+        "POO",
+        "BD"
+    ],
+
+    "SCM": [
+        "Supply Chain",
+        "Logistique",
+        "Gestion des stocks",
+        "Transport",
+        "Management"
+    ],
+
+    "GC": [
+        "Mécanique",
+        "Résistance des matériaux",
+        "Béton armé",
+        "Construction",
+        "Géotechnique"
+    ],
+
+    "MS": [
+        "Management",
+        "Marketing",
+        "Finance",
+        "Comptabilité",
+        "Gestion de projet"
+    ]
+
+};
+
+
+/*
+|--------------------------------------------------------------------------
+| AFFICHER LES MODULES
+|--------------------------------------------------------------------------
+*/
+
+function afficherModules() {
+
+    let filiereSelectionnee =
+        document.querySelector(
+            'input[name="filiere"]:checked'
+        );
+
+    let container =
+        document.getElementById("modules-container");
+
+
+    if (!filiereSelectionnee) {
+
+        container.innerHTML =
+            "<p>Veuillez choisir une filière.</p>";
+
+        return;
+    }
+
+
+    let filiere =
+        filiereSelectionnee.value;
+
+
+    let modules =
+        modulesParFiliere[filiere] || [];
+
+
+    container.innerHTML = "";
+
+
+    modules.forEach(function(module) {
+
+        let label =
+            document.createElement("label");
+
+        let checkbox =
+            document.createElement("input");
+
+        checkbox.type = "checkbox";
+
+        checkbox.name = "modules[]";
+
+        checkbox.value = module;
+
+
+        /*
+        | Vérifier si le module était déjà sélectionné
+        */
+
+        let modulesSelectionnes =
+            <?= json_encode($modules) ?>;
+
+
+        if (
+            modulesSelectionnes.includes(module)
+        ) {
+
+            checkbox.checked = true;
+
+        }
+
+
+        label.appendChild(checkbox);
+
+        label.appendChild(
+            document.createTextNode(" " + module)
+        );
+
+
+        container.appendChild(label);
+
+    });
+
+}
+
+
+/*
+|--------------------------------------------------------------------------
+| CHANGEMENT DE FILIÈRE
+|--------------------------------------------------------------------------
+*/
+
+document
+    .querySelectorAll('input[name="filiere"]')
+    .forEach(function(radio) {
+
+        radio.addEventListener(
+            "change",
+            function() {
+
+                afficherAnnees();
+
+                afficherModules();
+
+            }
+        );
+
+    });
+
+
+/*
+|--------------------------------------------------------------------------
+| AFFICHER LES MODULES AU CHARGEMENT
+|--------------------------------------------------------------------------
+*/
+
+afficherModules();
+
 
 </script>
 
