@@ -779,13 +779,88 @@ function ajouterProjet() {
 
 function configurerDates(projet) {
 
-
-let dateDebut = projet.querySelector(".date-debut");
-
-let dateFin = projet.querySelector(".date-fin");
+    let dateDebut = projet.querySelector(".date-debut");
+    let dateFin = projet.querySelector(".date-fin");
 
 
-dateDebut.addEventListener("change", function() {
+    /*
+    |----------------------------------------------------------------------
+    | Quand la date de début est choisie
+    |----------------------------------------------------------------------
+    */
+
+    dateDebut.addEventListener("change", function() {
+
+        if (dateDebut.value !== "") {
+
+            /*
+            | La date de fin ne peut pas être avant la date de début
+            */
+
+            dateFin.min = dateDebut.value;
+
+
+            /*
+            | Si une date de fin existe déjà,
+            | on vérifie si elle est encore valide
+            */
+
+            if (
+                dateFin.value !== "" &&
+                dateFin.value < dateDebut.value
+            ) {
+
+                dateFin.value = "";
+
+                alert(
+                    "La date de fin ne peut pas être avant la date de début."
+                );
+
+            }
+
+        }
+
+    });
+
+
+    /*
+    |----------------------------------------------------------------------
+    | Quand la date de fin est choisie
+    |----------------------------------------------------------------------
+    */
+
+    dateFin.addEventListener("change", function() {
+
+        /*
+        | Le navigateur ne donne une valeur que lorsque
+        | la date est complètement sélectionnée.
+        */
+
+        if (
+            dateDebut.value !== "" &&
+            dateFin.value !== ""
+        ) {
+
+            if (dateFin.value < dateDebut.value) {
+
+                alert(
+                    "Erreur : la date de fin doit être après ou égale à la date de début."
+                );
+
+                dateFin.value = "";
+
+            }
+
+        }
+
+    });
+
+
+    /*
+    |----------------------------------------------------------------------
+    | Si le formulaire contient déjà une date de début
+    |---------------------------------------------------------------------- 
+    */
 
     if (dateDebut.value !== "") {
 
@@ -793,60 +868,7 @@ dateDebut.addEventListener("change", function() {
 
     }
 
-
-    if (
-        dateDebut.value !== "" &&
-        dateFin.value !== ""
-    ) {
-
-        let debut = new Date(dateDebut.value);
-
-        let fin = new Date(dateFin.value);
-
-
-        if (fin < debut) {
-
-            dateFin.value = "";
-
-            alert(
-                "La date de fin ne peut pas être avant la date de début."
-            );
-
-        }
-
-    }
-
-});
-
-
-dateFin.addEventListener("change", function() {
-
-    if (
-        dateDebut.value !== "" &&
-        dateFin.value !== ""
-    ) {
-
-        let debut = new Date(dateDebut.value);
-
-        let fin = new Date(dateFin.value);
-
-
-        if (fin < debut) {
-
-            alert(
-                "Erreur : la date de fin ne peut pas être avant la date de début."
-            );
-
-            dateFin.value = "";
-
-            dateFin.focus();
-
-        }
-
-    }
-
-});
-
+}
 
 /*
 |------------------------------------------------------------------
