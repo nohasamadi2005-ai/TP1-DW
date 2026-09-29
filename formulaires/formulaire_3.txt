@@ -1,0 +1,43 @@
+========================================
+FICHE DE RENSEIGNEMENTS
+========================================
+
+RENSEIGNEMENTS PERSONNELS
+-------------------------
+Nom : kouibel
+Prénom : arwa
+Âge : 20
+Téléphone : 0636987545
+Email : arwa@gmail.com
+
+RENSEIGNEMENTS ACADÉMIQUES
+--------------------------
+Filière : GI
+Année : 2ème année
+Nombre de projets : 1
+Modules : Compilation, POO, BD
+
+PROJETS RÉALISÉS
+----------------
+
+Projet 1
+Nom : linux
+Date de début : 2025-04-01
+Date de fin : 2025-05-01
+Lieu : 
+Description : 
+
+STAGES RÉALISÉS
+---------------
+Aucun stage renseigné.
+
+AUTRES INFORMATIONS
+-------------------
+Centres d'intérêt : 
+Compétences : 
+Langues : 
+Remarques : 
+Fichier transmis : test.txt
+
+Date d'enregistrement : 29/09/2026 00:54:44
+========================================

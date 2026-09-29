@@ -210,13 +210,15 @@ if ($nombre_stages < 1) {
 
             <label for="email">Email :</label>
 
-            <input
-                type="email"
-                id="email"
-                name="email"
-                value="<?= h($data['email'] ?? '') ?>"
-                required
-            >
+<input
+    type="email"
+    id="email"
+    name="email"
+    value="<?= h($data['email'] ?? '') ?>"
+    required
+>
+
+<p id="email-message"></p>
 
         </fieldset>
 
@@ -1498,6 +1500,89 @@ afficherAnnees();
 
 afficherModules();
 
+const emailInput = document.getElementById("email");
+const emailMessage = document.getElementById("email-message");
+
+emailInput.addEventListener("input", function () {
+
+    let email = emailInput.value.trim();
+
+    emailMessage.textContent = "";
+    emailMessage.style.color = "";
+
+    if (email === "") {
+        return;
+    }
+
+
+    /* =========================
+       1. VÉRIFICATION SYNTAXE
+       ========================= */
+
+    let syntaxeValide =
+        /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+
+    if (!syntaxeValide) {
+
+        emailMessage.textContent =
+            " Adresse email invalide.";
+
+        emailMessage.style.color = "red";
+
+        return;
+    }
+
+
+    /* =========================
+       2. RÉCUPÉRER LE DOMAINE
+       ========================= */
+
+    let domaine =
+        email.split("@")[1];
+
+
+    /* =========================
+       3. VÉRIFIER LE DOMAINE
+       ========================= */
+
+    fetch(
+        "https://dns.google/resolve?name=" +
+        encodeURIComponent(domaine) +
+        "&type=MX"
+    )
+
+    .then(response => response.json())
+
+    .then(data => {
+
+        if (data.Answer) {
+
+            emailMessage.textContent =
+                " Email et domaine valides.";
+
+            emailMessage.style.color = "green";
+
+        } else {
+
+            emailMessage.textContent =
+                " Le domaine n'existe pas.";
+
+            emailMessage.style.color = "red";
+
+        }
+
+    })
+
+    .catch(() => {
+
+        emailMessage.textContent =
+            " Impossible de vérifier le domaine.";
+
+        emailMessage.style.color = "red";
+
+    });
+
+});
 </script>
 
 </body>
