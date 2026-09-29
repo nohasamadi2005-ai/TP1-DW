@@ -76,21 +76,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     /*
     |--------------------------------------------------------------------------
-    | VALIDATION EMAIL
-    |--------------------------------------------------------------------------
-    */
-
-    if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
-
-        $_SESSION['cv_error'] = "Adresse email invalide.";
-
-        header("Location: formulaire2.php");
-        exit;
-    }
-
-
-    /*
-    |--------------------------------------------------------------------------
     | FORMATIONS
     |--------------------------------------------------------------------------
     */
@@ -185,6 +170,69 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 'description' => $description
             ];
         }
+    }
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | VALIDATION EMAIL : SYNTAXE + DOMAINE
+    |--------------------------------------------------------------------------
+    */
+
+    if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+
+        // On conserve les informations saisies avant de revenir au formulaire.
+        $_SESSION['cv'] = [
+            'nom' => $nom,
+            'prenom' => $prenom,
+            'age' => $age,
+            'telephone' => $telephone,
+            'email' => $email,
+            'adresse' => $adresse,
+            'photo' => $_SESSION['cv']['photo'] ?? '',
+            'formations' => $formations,
+            'stages' => $stages,
+            'competences' => $competences,
+            'langues' => $langues,
+            'interets' => $interets
+        ];
+
+        $_SESSION['cv_error'] = "Adresse email invalide : vérifiez sa syntaxe.";
+
+        header("Location: formulaire2.php");
+        exit;
+    }
+
+    $domaine = substr(strrchr($email, '@'), 1);
+
+    $domaineExiste =
+        checkdnsrr($domaine, 'MX') ||
+        checkdnsrr($domaine, 'A') ||
+        checkdnsrr($domaine, 'AAAA');
+
+    if (!$domaineExiste) {
+
+        // Même en cas d'erreur, toutes les informations restent dans la session.
+        $_SESSION['cv'] = [
+            'nom' => $nom,
+            'prenom' => $prenom,
+            'age' => $age,
+            'telephone' => $telephone,
+            'email' => $email,
+            'adresse' => $adresse,
+            'photo' => $_SESSION['cv']['photo'] ?? '',
+            'formations' => $formations,
+            'stages' => $stages,
+            'competences' => $competences,
+            'langues' => $langues,
+            'interets' => $interets
+        ];
+
+        $_SESSION['cv_error'] =
+            "Le domaine de l'adresse email n'existe pas ou ne possède pas de configuration DNS valide.";
+
+        header("Location: formulaire2.php");
+        exit;
     }
 
 
@@ -462,7 +510,7 @@ if (isset($_GET['pdf']) && $_GET['pdf'] == '1') {
 
     $formationsHTML = '';
 
-    foreach ($cv['formations'] as $formation) {
+    foreach ($cv['formations'] ?? [] as $formation) {
 
         $formationsHTML .= '
 
@@ -498,7 +546,7 @@ if (isset($_GET['pdf']) && $_GET['pdf'] == '1') {
 
     $stagesHTML = '';
 
-    foreach ($cv['stages'] as $stage) {
+    foreach ($cv['stages'] ?? [] as $stage) {
 
         $stagesHTML .= '
 
@@ -935,10 +983,300 @@ table {
 
 
     <!-- ========================================================= -->
-    <!-- BOUTONS -->
+    <!-- CV COMPLET -->
+    <!-- ========================================================= -->
+
+    <div class="cv-sheet">
+
+
+        <!-- ===================================================== -->
+        <!-- TITRE DU CV -->
+        <!-- ===================================================== -->
+
+        <header class="cv-header">
+
+            <h1>
+                Curriculum Vitae
+            </h1>
+
+
+            <div class="cv-person-name">
+
+                <?= h($cv['prenom']) ?>
+
+                <?= h($cv['nom']) ?>
+
+            </div>
+
+        </header>
+
+
+        <!-- ===================================================== -->
+        <!-- CONTENU DU CV : SIDEBAR + PARTIE PRINCIPALE -->
+        <!-- ===================================================== -->
+
+        <div class="cv-content">
+
+
+            <!-- ================================================= -->
+            <!-- SIDEBAR -->
+            <!-- ================================================= -->
+
+            <aside class="cv-sidebar">
+
+
+                <?php if (!empty($cv['photo'])): ?>
+
+                    <img
+                        src="<?= h($cv['photo']) ?>"
+                        class="cv-photo"
+                        alt="Photo"
+                        width="90"
+                        height="90"
+                    >
+
+                <?php endif; ?>
+
+
+                <!-- ================================================= -->
+                <!-- CONTACT -->
+                <!-- ================================================= -->
+
+                <div class="cv-side-section">
+
+                    <h3>
+                        CONTACT
+                    </h3>
+
+
+                    <p>
+
+                        <strong>Email :</strong><br>
+
+                        <?= h($cv['email']) ?>
+
+                    </p>
+
+
+                    <p>
+
+                        <strong>Téléphone :</strong><br>
+
+                        <?= h($cv['telephone']) ?>
+
+                    </p>
+
+
+                    <p>
+
+                        <strong>Adresse :</strong><br>
+
+                        <?= h($cv['adresse']) ?>
+
+                    </p>
+
+
+                    <p>
+
+                        <strong>Âge :</strong>
+
+                        <?= h($cv['age']) ?> ans
+
+                    </p>
+
+                </div>
+
+
+                <!-- ================================================= -->
+                <!-- COMPÉTENCES -->
+                <!-- ================================================= -->
+
+                <div class="cv-side-section">
+
+                    <h3>
+                        COMPÉTENCES
+                    </h3>
+
+
+                    <p>
+
+                        <?= nl2br(h($cv['competences'])) ?>
+
+                    </p>
+
+                </div>
+
+
+                <!-- ================================================= -->
+                <!-- LANGUES -->
+                <!-- ================================================= -->
+
+                <div class="cv-side-section">
+
+                    <h3>
+                        LANGUES
+                    </h3>
+
+
+                    <p>
+
+                        <?= nl2br(h($cv['langues'])) ?>
+
+                    </p>
+
+                </div>
+
+
+                <!-- ================================================= -->
+                <!-- CENTRES D'INTÉRÊT -->
+                <!-- ================================================= -->
+
+                <div class="cv-side-section">
+
+                    <h3>
+                        CENTRES D'INTÉRÊT
+                    </h3>
+
+
+                    <p>
+
+                        <?= nl2br(h($cv['interets'])) ?>
+
+                    </p>
+
+                </div>
+
+
+            </aside>
+
+
+            <!-- ================================================= -->
+            <!-- PARTIE PRINCIPALE -->
+            <!-- ================================================= -->
+
+            <main class="cv-main">
+
+
+                <!-- ================================================= -->
+                <!-- FORMATIONS -->
+                <!-- ================================================= -->
+
+                <section class="cv-section">
+
+                    <h2>
+                        Formations
+                    </h2>
+
+
+                    <?php foreach ($cv['formations'] as $formation): ?>
+
+                        <div class="cv-item">
+
+
+                            <h3>
+
+                                <?= h($formation['diplome']) ?>
+
+                            </h3>
+
+
+                            <p class="cv-place">
+
+                                <?= h($formation['etablissement']) ?>
+
+                            </p>
+
+
+                            <p class="cv-date">
+
+                                <?= h(dateCourte($formation['date_debut'])) ?>
+
+                                -
+
+                                <?= h(dateCourte($formation['date_fin'])) ?>
+
+                            </p>
+
+
+                        </div>
+
+                    <?php endforeach; ?>
+
+
+                </section>
+
+
+                <!-- ================================================= -->
+                <!-- STAGES -->
+                <!-- ================================================= -->
+
+                <section class="cv-section">
+
+                    <h2>
+                        Expériences / Stages
+                    </h2>
+
+
+                    <?php foreach ($cv['stages'] as $stage): ?>
+
+                        <div class="cv-item">
+
+
+                            <h3>
+
+                                <?= h($stage['poste']) ?>
+
+                            </h3>
+
+
+                            <p class="cv-place">
+
+                                <?= h($stage['entreprise']) ?>
+
+                            </p>
+
+
+                            <p class="cv-date">
+
+                                <?= h(dateCourte($stage['date_debut'])) ?>
+
+                                -
+
+                                <?= h(dateCourte($stage['date_fin'])) ?>
+
+                            </p>
+
+
+                            <p>
+
+                                <?= nl2br(h($stage['description'])) ?>
+
+                            </p>
+
+
+                        </div>
+
+                    <?php endforeach; ?>
+
+
+                </section>
+
+
+            </main>
+
+
+        </div>
+
+
+    </div>
+
+
+    <!-- ========================================================= -->
+    <!-- BOUTONS SOUS LE CV -->
     <!-- ========================================================= -->
 
     <div class="cv-buttons">
+
 
         <a
             href="formulaire2.php"
@@ -955,241 +1293,9 @@ table {
             Télécharger mon CV
         </a>
 
+
     </div>
 
-
-    <!-- ========================================================= -->
-    <!-- CV -->
-    <!-- ========================================================= -->
-
-    <div class="cv-sheet">
-
-
-        <!-- ===================================================== -->
-        <!-- SIDEBAR -->
-        <!-- ===================================================== -->
-
-        <aside class="cv-sidebar">
-
-
-            <?php if (!empty($cv['photo'])): ?>
-
-                <img
-                    src="<?= h($cv['photo']) ?>"
-                    class="cv-photo"
-                    alt="Photo"
-                >
-
-            <?php endif; ?>
-
-
-            <div class="cv-side-section">
-
-                <h3>CONTACT</h3>
-
-
-                <p>
-
-                    <strong>Email :</strong><br>
-
-                    <?= h($cv['email']) ?>
-
-                </p>
-
-
-                <p>
-
-                    <strong>Téléphone :</strong><br>
-
-                    <?= h($cv['telephone']) ?>
-
-                </p>
-
-
-                <p>
-
-                    <strong>Adresse :</strong><br>
-
-                    <?= h($cv['adresse']) ?>
-
-                </p>
-
-
-                <p>
-
-                    <strong>Âge :</strong>
-
-                    <?= h($cv['age']) ?> ans
-
-                </p>
-
-            </div>
-
-
-            <div class="cv-side-section">
-
-                <h3>COMPÉTENCES</h3>
-
-                <p>
-                    <?= nl2br(h($cv['competences'])) ?>
-                </p>
-
-            </div>
-
-
-            <div class="cv-side-section">
-
-                <h3>LANGUES</h3>
-
-                <p>
-                    <?= nl2br(h($cv['langues'])) ?>
-                </p>
-
-            </div>
-
-
-            <div class="cv-side-section">
-
-                <h3>CENTRES D'INTÉRÊT</h3>
-
-                <p>
-                    <?= nl2br(h($cv['interets'])) ?>
-                </p>
-
-            </div>
-
-
-        </aside>
-
-
-        <!-- ===================================================== -->
-        <!-- PARTIE PRINCIPALE -->
-        <!-- ===================================================== -->
-
-        <main class="cv-main">
-
-
-            <header class="cv-header">
-
-                <h1>
-                    Curriculum Vitae
-                </h1>
-
-
-                <div class="cv-person-name">
-
-                    <?= h($cv['prenom']) ?>
-
-                    <?= h($cv['nom']) ?>
-
-                </div>
-
-            </header>
-
-
-            <!-- ================================================= -->
-            <!-- FORMATIONS -->
-            <!-- ================================================= -->
-
-            <section class="cv-section">
-
-                <h2>
-                    Formations
-                </h2>
-
-
-                <?php foreach ($cv['formations'] as $formation): ?>
-
-                    <div class="cv-item">
-
-                        <h3>
-
-                            <?= h($formation['diplome']) ?>
-
-                        </h3>
-
-
-                        <p class="cv-place">
-
-                            <?= h($formation['etablissement']) ?>
-
-                        </p>
-
-
-                        <p class="cv-date">
-
-                            <?= h(dateCourte($formation['date_debut'])) ?>
-
-                            -
-
-                            <?= h(dateCourte($formation['date_fin'])) ?>
-
-                        </p>
-
-                    </div>
-
-                <?php endforeach; ?>
-
-            </section>
-
-
-            <!-- ================================================= -->
-            <!-- STAGES -->
-            <!-- ================================================= -->
-
-            <section class="cv-section">
-
-                <h2>
-                    Expériences / Stages
-                </h2>
-
-
-                <?php foreach ($cv['stages'] as $stage): ?>
-
-                    <div class="cv-item">
-
-                        <h3>
-
-                            <?= h($stage['poste']) ?>
-
-                        </h3>
-
-
-                        <p class="cv-place">
-
-                            <?= h($stage['entreprise']) ?>
-
-                        </p>
-
-
-                        <p class="cv-date">
-
-                            <?= h(dateCourte($stage['date_debut'])) ?>
-
-                            -
-
-                            <?= h(dateCourte($stage['date_fin'])) ?>
-
-                        </p>
-
-
-                        <p>
-
-                            <?= nl2br(h($stage['description'])) ?>
-
-                        </p>
-
-                    </div>
-
-                <?php endforeach; ?>
-
-            </section>
-
-
-        </main>
-
-
-    </div>
 
 </div>
 
@@ -1197,3 +1303,4 @@ table {
 </body>
 
 </html>
+

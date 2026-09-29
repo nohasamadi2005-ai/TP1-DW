@@ -1,462 +1,505 @@
+/* =========================================================
+   STYLE GÉNÉRAL
+========================================================= */
+
 * {
     box-sizing: border-box;
 }
 
-
 body {
     margin: 0;
     padding: 30px;
-
     font-family: Arial, sans-serif;
-
     background: #f4f6f7;
-
     color: #333;
 }
 
 
-/* ========================================================= */
-/* FORMULAIRE */
-/* ========================================================= */
+/* =========================================================
+   FORMULAIRE
+========================================================= */
 
 .form-container {
-
     max-width: 1000px;
-
     margin: auto;
-
     background: white;
-
     padding: 35px;
-
     border-radius: 12px;
-
     box-shadow: 0 5px 20px rgba(0, 0, 0, 0.08);
 }
 
-
 .form-container > h1 {
-
     text-align: center;
-
     margin-bottom: 35px;
-
     color: #2d6a5a;
 }
 
-
 .form-container h2 {
-
     margin-top: 35px;
-
     margin-bottom: 20px;
-
     color: #2d6a5a;
-
     border-bottom: 2px solid #2d6a5a;
-
     padding-bottom: 8px;
 }
 
-
 .form-grid {
-
     display: grid;
-
     grid-template-columns: 1fr 1fr;
-
     gap: 20px;
 }
 
-
 .form-group {
-
     margin-bottom: 20px;
 }
-
 
 .form-group label,
 .repeat-card label {
-
     display: block;
-
     font-weight: bold;
-
     margin-bottom: 7px;
 }
 
-
 input,
-textarea {
-
+textarea,
+select {
     width: 100%;
-
     padding: 11px;
-
     border: 1px solid #ccc;
-
     border-radius: 6px;
-
     font-size: 15px;
+    font-family: Arial, sans-serif;
+    background: white;
 }
 
-
 textarea {
-
     resize: vertical;
 }
 
-
 input:focus,
-textarea:focus {
-
+textarea:focus,
+select:focus {
     outline: none;
-
     border-color: #2d6a5a;
+    box-shadow: 0 0 4px rgba(45, 106, 90, 0.2);
 }
 
 
-/* ========================================================= */
-/* CARTES */
-/* ========================================================= */
+/* =========================================================
+   CARTES FORMATIONS ET STAGES
+========================================================= */
 
 .repeat-card {
-
     background: #f8faf9;
-
     border: 1px solid #ddd;
-
     padding: 20px;
-
     border-radius: 8px;
-
     margin-bottom: 20px;
 }
 
-
 .date-grid {
-
     display: grid;
-
     grid-template-columns: 1fr 1fr;
-
     gap: 15px;
-
     margin-top: 15px;
-
     margin-bottom: 15px;
 }
 
 
-/* ========================================================= */
-/* BOUTONS */
-/* ========================================================= */
+/* =========================================================
+   BOUTONS
+========================================================= */
 
 button,
 a {
-
     text-decoration: none;
 }
-
 
 .btn-submit,
 .btn-secondary,
 .btn-reset,
 .btn-remove {
-
     display: inline-block;
-
     padding: 11px 18px;
-
     border: none;
-
     border-radius: 6px;
-
     cursor: pointer;
-
     font-size: 15px;
-
-    text-decoration: none;
+    text-align: center;
+    font-family: Arial, sans-serif;
+    transition: background 0.2s;
 }
 
-
 .btn-submit {
-
     background: #2d6a5a;
-
     color: white;
 }
 
-
 .btn-submit:hover {
-
     background: #245548;
 }
 
-
 .btn-secondary {
-
     background: #ddd;
-
     color: #333;
-
     margin-bottom: 20px;
 }
 
+.btn-secondary:hover {
+    background: #ccc;
+}
 
 .btn-reset {
-
     background: #eee;
-
     color: #333;
 }
 
+.btn-reset:hover {
+    background: #ddd;
+}
 
 .btn-remove {
-
     background: #c0392b;
-
     color: white;
-
     margin-top: 15px;
 }
 
+.btn-remove:hover {
+    background: #a93226;
+}
 
 .buttons {
-
     display: flex;
-
     gap: 15px;
-
     margin-top: 35px;
-
     justify-content: center;
+    flex-wrap: wrap;
 }
 
 
-/* ========================================================= */
-/* ERREUR */
-/* ========================================================= */
+/* =========================================================
+   MESSAGES D'ERREUR
+========================================================= */
 
 .error-message {
-
     background: #ffe5e5;
-
     color: #b00000;
-
     padding: 15px;
-
     border-radius: 6px;
-
     margin-bottom: 20px;
+    border: 1px solid #f5bcbc;
 }
 
-
 .photo-existante {
-
     color: #2d6a5a;
-
     font-size: 14px;
 }
 
 
-/* ========================================================= */
-/* PAGE CV */
-/* ========================================================= */
+/* =========================================================
+   PAGE RÉCAPITULATIVE DU CV
+========================================================= */
 
 .cv-page {
-
-    max-width: 1100px;
-
-    margin: auto;
+    width: 100%;
+    min-height: 100vh;
+    padding: 40px 20px;
+    background: #f2f3f3;
 }
 
 
-.cv-buttons {
-
-    display: flex;
-
-    justify-content: center;
-
-    gap: 15px;
-
-    margin-bottom: 25px;
-}
-
+/* =========================================================
+   CADRE PRINCIPAL DU CV
+========================================================= */
 
 .cv-sheet {
+    width: 100%;
+    max-width: 900px;
+    margin: 0 auto;
 
+    background: #ffffff;
+
+    border: 1px solid #555;
+    border-radius: 3px;
+
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.12);
+
+    overflow: hidden;
+}
+
+
+/* =========================================================
+   EN-TÊTE DU CV
+========================================================= */
+
+.cv-header {
+    width: 100%;
+
+    text-align: center;
+
+    padding: 28px 25px 22px;
+
+    background: #ffffff;
+
+    border-bottom: 1px solid #555;
+}
+
+.cv-header h1 {
+    margin: 0;
+
+    font-size: 27px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+
+    color: #2d6a5a;
+}
+
+.cv-person-name {
+    margin-top: 8px;
+
+    font-size: 20px;
+    font-weight: bold;
+
+    text-transform: uppercase;
+
+    color: #333;
+
+    overflow-wrap: anywhere;
+}
+
+
+/* =========================================================
+   CONTENU DU CV
+   COLONNE GAUCHE + COLONNE DROITE
+========================================================= */
+
+.cv-content {
     display: grid;
 
-    grid-template-columns: 285px 1fr;
+    grid-template-columns: 245px minmax(0, 1fr);
 
-    max-width: 900px;
-
-    min-height: 1100px;
-
-    margin: auto;
-
-    background: white;
-
-    box-shadow: 0 5px 20px rgba(0, 0, 0, 0.12);
+    width: 100%;
 }
 
 
-/* ========================================================= */
-/* SIDEBAR CV */
-/* ========================================================= */
+/* =========================================================
+   COLONNE GAUCHE
+========================================================= */
 
 .cv-sidebar {
+    padding: 25px 20px;
 
-    background: #e8f3ef;
+    background: #fafafa;
 
-    padding: 35px 25px;
+    border-right: 1px solid #bbb;
+
+    overflow-wrap: anywhere;
 }
 
 
+/* =========================================================
+   PHOTO
+========================================================= */
+
 .cv-photo {
+    width: 90px;
+    height: 90px;
 
-    width: 85px;
-
-    height: 85px;
+    max-width: 90px;
+    max-height: 90px;
 
     object-fit: cover;
 
     display: block;
 
-    margin-bottom: 25px;
+    margin: 0 auto 22px;
 
-    border-radius: 4px;
+    border: 1px solid #777;
+
+    border-radius: 2px;
+
+    box-shadow: none;
 }
 
+
+/* =========================================================
+   PETITS CADRES DE LA COLONNE GAUCHE
+========================================================= */
 
 .cv-side-section {
+    border: 1px solid #c8c8c8;
 
-    margin-bottom: 30px;
+    padding: 14px 15px;
+
+    margin-bottom: 15px;
+
+    background: #ffffff;
+
+    border-radius: 2px;
+
+    overflow-wrap: anywhere;
+}
+
+.cv-side-section h3 {
+    margin: -14px -15px 12px;
+
+    padding: 8px 10px;
+
+    background: #2d6a5a;
+
+    color: white;
+
+    font-size: 13px;
+
+    letter-spacing: 0.8px;
+
+    text-align: center;
+}
+
+.cv-side-section p {
+    margin: 7px 0;
+
+    font-size: 12.5px;
+
+    line-height: 1.55;
+
+    color: #444;
+
+    overflow-wrap: anywhere;
 }
 
 
-.cv-side-section h3 {
+/* =========================================================
+   COLONNE DROITE
+========================================================= */
+
+.cv-main {
+    padding: 25px 28px;
+
+    background: #ffffff;
+
+    min-width: 0;
+
+    overflow-wrap: anywhere;
+}
+
+
+/* =========================================================
+   CADRES FORMATIONS / EXPÉRIENCES
+========================================================= */
+
+.cv-section {
+    border: 1px solid #c8c8c8;
+
+    padding: 20px 22px;
+
+    margin-bottom: 20px;
+
+    background: #ffffff;
+
+    border-radius: 2px;
+
+    overflow-wrap: anywhere;
+}
+
+.cv-section > h2 {
+    margin: -20px -22px 18px;
+
+    padding: 10px 14px;
+
+    background: #f1f5f3;
+
+    border-bottom: 1px solid #c8c8c8;
 
     color: #2d6a5a;
+
+    font-size: 17px;
+
+    letter-spacing: 0.5px;
+}
+
+
+/* =========================================================
+   FORMATIONS ET STAGES
+========================================================= */
+
+.cv-item {
+    padding: 13px 0;
+
+    margin-bottom: 10px;
+
+    border-bottom: 1px solid #e1e1e1;
+
+    overflow-wrap: anywhere;
+}
+
+.cv-item:last-child {
+    border-bottom: none;
+    margin-bottom: 0;
+}
+
+.cv-item h3 {
+    margin: 0 0 5px;
 
     font-size: 15px;
 
-    border-bottom: 1px solid #2d6a5a;
-
-    padding-bottom: 7px;
-
-    margin-bottom: 12px;
+    color: #333;
 }
-
-
-.cv-side-section p {
-
-    line-height: 1.6;
-
-    font-size: 14px;
-}
-
-
-/* ========================================================= */
-/* PARTIE PRINCIPALE CV */
-/* ========================================================= */
-
-.cv-main {
-
-    padding: 35px 40px;
-}
-
-
-.cv-header {
-
-    text-align: center;
-
-    margin-bottom: 40px;
-}
-
-
-.cv-header h1 {
-
-    margin: 0;
-
-    font-size: 3rem;
-
-    color: #2d6a5a;
-}
-
-
-.cv-person-name {
-
-    margin-top: 10px;
-
-    font-size: 1.4rem;
-
-    font-weight: bold;
-}
-
-
-.cv-section {
-
-    margin-bottom: 35px;
-}
-
-
-.cv-section > h2 {
-
-    color: #2d6a5a;
-
-    font-size: 20px;
-
-    border-bottom: 2px solid #2d6a5a;
-
-    padding-bottom: 8px;
-
-    margin-bottom: 20px;
-}
-
-
-.cv-item {
-
-    margin-bottom: 25px;
-}
-
-
-.cv-item h3 {
-
-    margin: 0 0 5px;
-
-    font-size: 17px;
-}
-
 
 .cv-place {
-
-    margin: 0 0 5px;
+    margin: 0 0 4px;
 
     font-weight: bold;
-}
 
+    font-size: 13px;
+
+    color: #555;
+}
 
 .cv-date {
-
     margin: 0 0 8px;
 
+    font-size: 12px;
+
     color: #777;
-
-    font-size: 14px;
 }
-
 
 .cv-item p {
+    margin-top: 6px;
 
-    line-height: 1.6;
+    line-height: 1.55;
+
+    font-size: 13px;
+
+    color: #444;
 }
 
 
-/* ========================================================= */
-/* RESPONSIVE */
-/* ========================================================= */
+/* =========================================================
+   BOUTONS SOUS LE CV
+========================================================= */
+
+.cv-buttons {
+    display: flex;
+
+    justify-content: center;
+
+    align-items: center;
+
+    gap: 15px;
+
+    margin: 25px auto 0;
+
+    flex-wrap: wrap;
+}
+
+.cv-buttons a {
+    margin-bottom: 0;
+}
+
+
+/* =========================================================
+   RESPONSIVE
+========================================================= */
 
 @media (max-width: 750px) {
 
@@ -465,45 +508,115 @@ a {
     }
 
 
-    .form-grid {
+    /* ---------- FORMULAIRE ---------- */
 
-        grid-template-columns: 1fr;
+    .form-container {
+        padding: 20px;
     }
 
+    .form-grid {
+        grid-template-columns: 1fr;
+    }
 
     .date-grid {
-
         grid-template-columns: 1fr;
     }
 
+
+    /* ---------- CV ---------- */
+
+    .cv-page {
+        padding: 20px 10px;
+    }
 
     .cv-sheet {
+        width: 100%;
+        min-height: auto;
+    }
 
+    .cv-content {
         grid-template-columns: 1fr;
     }
 
-
     .cv-sidebar {
-
         padding: 25px;
-    }
 
+        border-right: none;
+
+        border-bottom: 1px solid #bbb;
+    }
 
     .cv-main {
-
-        padding: 25px;
+        padding: 20px;
     }
 
+    .cv-header {
+        padding: 22px 15px;
+    }
 
     .cv-header h1 {
-
-        font-size: 2.2rem;
+        font-size: 22px;
     }
 
+    .cv-person-name {
+        font-size: 17px;
+    }
+
+    .cv-section {
+        padding: 17px;
+    }
+
+    .cv-section > h2 {
+        margin: -17px -17px 15px;
+    }
 
     .cv-buttons {
-
         flex-direction: column;
+
+        align-items: center;
     }
 
+    .cv-buttons a {
+        width: 100%;
+
+        max-width: 300px;
+
+        text-align: center;
+    }
+}
+
+
+/* =========================================================
+   IMPRESSION
+========================================================= */
+
+@media print {
+
+    body {
+        padding: 0;
+
+        background: white;
+    }
+
+    .cv-buttons {
+        display: none;
+    }
+
+    .cv-page {
+        max-width: none;
+
+        padding: 0;
+
+        background: white;
+    }
+
+    .cv-sheet {
+        max-width: none;
+
+        width: 100%;
+
+        box-shadow: none;
+
+        border-radius: 0;
+    }
 }
