@@ -46,7 +46,12 @@ function dateCourte($date)
 
     return date('m/Y', $timestamp);
 }
+function dateValide($date)
+{
+    $objetDate = DateTime::createFromFormat('!Y-m-d', $date);
 
+    return $objetDate && $objetDate->format('Y-m-d') === $date;
+}
 
 /*
 |--------------------------------------------------------------------------
@@ -171,14 +176,83 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             ];
         }
     }
-
-
-    /*
+        /*
     |--------------------------------------------------------------------------
-    | VALIDATION EMAIL : SYNTAXE + DOMAINE
+    | VALIDATION DES DATES
     |--------------------------------------------------------------------------
     */
 
+    $erreurDate = '';
+
+    // Vérifier les dates des formations
+    foreach ($formations as $formation) {
+
+        $debut = $formation['date_debut'];
+        $fin = $formation['date_fin'];
+
+        if (
+            ($debut !== '' && !dateValide($debut)) ||
+            ($fin !== '' && !dateValide($fin))
+        ) {
+            $erreurDate = "Une date de formation est invalide.";
+            break;
+        }
+
+        if ($debut !== '' && $fin !== '' && $fin < $debut) {
+            $erreurDate = "La date de fin de formation doit être égale ou postérieure à la date de début.";
+            break;
+        }
+    }
+
+    // Vérifier les dates des stages
+    if ($erreurDate === '') {
+
+        foreach ($stages as $stage) {
+
+            $debut = $stage['date_debut'];
+            $fin = $stage['date_fin'];
+
+            if (
+                ($debut !== '' && !dateValide($debut)) ||
+                ($fin !== '' && !dateValide($fin))
+            ) {
+                $erreurDate = "Une date de stage est invalide.";
+                break;
+            }
+
+            if ($debut !== '' && $fin !== '' && $fin < $debut) {
+                $erreurDate = "La date de fin du stage doit être égale ou postérieure à la date de début.";
+                break;
+            }
+        }
+    }
+
+   
+    if ($erreurDate !== '') {
+
+        $_SESSION['cv'] = [
+            'nom' => $nom,
+            'prenom' => $prenom,
+            'age' => $age,
+            'telephone' => $telephone,
+            'email' => $email,
+            'adresse' => $adresse,
+            'photo' => $_SESSION['cv']['photo'] ?? '',
+            'formations' => $formations,
+            'stages' => $stages,
+            'competences' => $competences,
+            'langues' => $langues,
+            'interets' => $interets
+        ];
+
+        $_SESSION['cv_error'] = $erreurDate;
+
+        header("Location: formulaire2.php");
+        exit;
+    }
+
+
+    
     if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
 
         // On conserve les informations saisies avant de revenir au formulaire.
@@ -437,25 +511,12 @@ if (empty($cv)) {
 }
 
 
-/*
-|--------------------------------------------------------------------------
-| TÉLÉCHARGER LE PDF
-|--------------------------------------------------------------------------
-|
-| Si on clique sur le bouton "Télécharger mon CV",
-| on arrive avec ?pdf=1
-|
-|--------------------------------------------------------------------------
-*/
+
 
 if (isset($_GET['pdf']) && $_GET['pdf'] == '1') {
 
 
-    /*
-    |--------------------------------------------------------------------------
-    | OPTIONS DOMPDF
-    |--------------------------------------------------------------------------
-    */
+    
 
     $options = new Options();
 

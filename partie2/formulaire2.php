@@ -147,7 +147,7 @@ if (empty($stages)) {
 
 
             <div class="form-group">
-                <label>Âge :</label>
+                <label>Age :</label>
                 <input
                     type="number"
                     name="age"
@@ -234,7 +234,7 @@ if (empty($stages)) {
 
                 <div class="repeat-card">
 
-                    <label>Diplôme :</label>
+                    <label>Nom de la formation :</label>
 
                     <input
                         type="text"
@@ -243,13 +243,7 @@ if (empty($stages)) {
                     >
 
 
-                    <label>Établissement :</label>
-
-                    <input
-                        type="text"
-                        name="etablissement[]"
-                        value="<?= h($formation['etablissement'] ?? '') ?>"
-                    >
+                    
 
 
                     <div class="date-grid">
@@ -261,6 +255,7 @@ if (empty($stages)) {
                                 type="date"
                                 name="date_debut_formation[]"
                                 value="<?= h($formation['date_debut'] ?? '') ?>"
+                                onchange="verifierDates(this, 'date_debut_formation[]', 'date_fin_formation[]')"
                             >
                         </div>
 
@@ -272,6 +267,7 @@ if (empty($stages)) {
                                 type="date"
                                 name="date_fin_formation[]"
                                 value="<?= h($formation['date_fin'] ?? '') ?>"
+                                onchange="verifierDates(this, 'date_debut_formation[]', 'date_fin_formation[]')"
                             >
                         </div>
 
@@ -341,6 +337,7 @@ if (empty($stages)) {
                                 type="date"
                                 name="date_debut_stage[]"
                                 value="<?= h($stage['date_debut'] ?? '') ?>"
+                                 onchange="verifierDates(this, 'date_debut_stage[]', 'date_fin_stage[]')"
                             >
                         </div>
 
@@ -352,6 +349,7 @@ if (empty($stages)) {
                                 type="date"
                                 name="date_fin_stage[]"
                                 value="<?= h($stage['date_fin'] ?? '') ?>"
+                                onchange="verifierDates(this, 'date_debut_stage[]', 'date_fin_stage[]')"
                             >
                         </div>
 
@@ -401,7 +399,7 @@ if (empty($stages)) {
             <textarea
                 name="competences"
                 rows="5"
-                placeholder="Exemple : HTML, CSS, JavaScript, PHP, Java..."
+              
             ><?= h($cv['competences'] ?? '') ?></textarea>
 
         </div>
@@ -418,7 +416,7 @@ if (empty($stages)) {
             <textarea
                 name="langues"
                 rows="4"
-                placeholder="Exemple : Arabe : courant, Français : courant, Anglais : intermédiaire"
+                
             ><?= h($cv['langues'] ?? '') ?></textarea>
 
         </div>
@@ -435,7 +433,7 @@ if (empty($stages)) {
             <textarea
                 name="interets"
                 rows="4"
-                placeholder="Exemple : Sport, lecture, programmation..."
+               
             ><?= h($cv['interets'] ?? '') ?></textarea>
 
         </div>
@@ -473,7 +471,26 @@ if (empty($stages)) {
 | AJOUTER UNE FORMATION
 |--------------------------------------------------------------------------
 */
+function verifierDates(champ, nomDebut, nomFin) {
+    const carte = champ.closest(".repeat-card");
 
+    const debut = carte.querySelector(
+        'input[name="' + nomDebut + '"]'
+    );
+
+    const fin = carte.querySelector(
+        'input[name="' + nomFin + '"]'
+    );
+
+    if (!debut || !fin) return;
+
+    fin.min = debut.value;
+
+    if (debut.value && fin.value && fin.value < debut.value) {
+        fin.value = "";
+        alert("La date de fin doit être égale ou postérieure à la date de début.");
+    }
+}
 function ajouterFormation()
 {
     const container = document.getElementById("formations-container");
@@ -484,7 +501,7 @@ function ajouterFormation()
 
     div.innerHTML = `
 
-        <label>Diplôme :</label>
+        <label>Nom de la formation:</label>
 
         <input
             type="text"
@@ -492,12 +509,7 @@ function ajouterFormation()
         >
 
 
-        <label>Établissement :</label>
-
-        <input
-            type="text"
-            name="etablissement[]"
-        >
+        
 
 
         <div class="date-grid">
@@ -509,6 +521,7 @@ function ajouterFormation()
                 <input
                     type="date"
                     name="date_debut_formation[]"
+                    onchange="verifierDates(this, 'date_debut_formation[]', 'date_fin_formation[]')"
                 >
 
             </div>
@@ -521,6 +534,7 @@ function ajouterFormation()
                 <input
                     type="date"
                     name="date_fin_formation[]"
+                    onchange="verifierDates(this, 'date_debut_formation[]', 'date_fin_formation[]')"
                 >
 
             </div>
@@ -583,6 +597,7 @@ function ajouterStage()
                 <input
                     type="date"
                     name="date_debut_stage[]"
+                    onchange="verifierDates(this, 'date_debut_stage[]', 'date_fin_stage[]')"
                 >
 
             </div>
@@ -595,6 +610,7 @@ function ajouterStage()
                 <input
                     type="date"
                     name="date_fin_stage[]"
+                    onchange="verifierDates(this, 'date_debut_stage[]', 'date_fin_stage[]')"
                 >
 
             </div>
