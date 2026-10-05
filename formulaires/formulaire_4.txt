@@ -1,0 +1,59 @@
+========================================
+FICHE DE RENSEIGNEMENTS
+========================================
+
+RENSEIGNEMENTS PERSONNELS
+-------------------------
+Nom : kouibel
+Prénom : arwa
+Âge : 20
+Téléphone : 0636987545
+Email : arwakl@gmail.com
+
+RENSEIGNEMENTS ACADÉMIQUES
+--------------------------
+Filière : GI
+Année : 2ème année
+Nombre de projets : 2
+Modules : Compilation, POO, BD
+
+PROJETS RÉALISÉS
+----------------
+
+Projet 1
+Nom : gestion des emails
+Date de début : 2026-09-01
+Date de fin : 2026-09-04
+Lieu : tetouan
+Description : 
+
+Projet 2
+Nom : gestion des commandes 
+Date de début : 2026-07-01
+Date de fin : 2026-07-31
+Lieu : larache
+Description : 
+
+STAGES RÉALISÉS
+---------------
+
+Stage 1
+Nom : plateforme de gestion des commandes realisées sur demandes
+Date de début : 
+Date de fin : 
+Lieu : tetouan
+Description : 
+
+AUTRES INFORMATIONS
+-------------------
+Centres d'intérêt : sport,music
+voyage
+Compétences : livewire
+tailwind css , alpine js 
+html
+Langues : arabe,francais,anglais
+Remarques : 
+Fichier transmis : test.txt
+
+Date d'enregistrement : 02/10/2026 13:42:52
+========================================

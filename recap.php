@@ -3,26 +3,22 @@
 session_start();
 
 
-/* =========================================================
-   1. RÉCUPÉRER LES DONNÉES
-   ========================================================= */
+
 
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 
-    /* Données envoyées par formulaire.php */
+   
 
     $data = $_POST;
 
 
-    /* Récupérer les anciennes données */
+    
 
     $ancienneDonnee =
         $_SESSION['formulaire'] ?? [];
 
 
-    /* =====================================================
-       2. GESTION DU FICHIER
-       ===================================================== */
+   
 
     /*
        Si aucun nouveau fichier n'est choisi,
@@ -34,6 +30,34 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 
     $data['fichier_stocke'] =
         $ancienneDonnee['fichier_stocke'] ?? '';
+            // Vérifier la syntaxe de l'email
+    $email = trim($data['email'] ?? '');
+
+    if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+
+        $_SESSION['formulaire'] = $data;
+        $_SESSION['email_error'] = "Adresse email invalide.";
+
+        header('Location: formulaire.php?erreur=email');
+        exit;
+    }
+
+    // Vérifier si le domaine existe
+    $domaine = substr(strrchr($email, '@'), 1);
+
+    $domaineExiste =
+        checkdnsrr($domaine, 'MX') ||
+        checkdnsrr($domaine, 'A') ||
+        checkdnsrr($domaine, 'AAAA');
+
+    if (!$domaineExiste) {
+
+        $_SESSION['formulaire'] = $data;
+        $_SESSION['email_error'] = "Le domaine de cette adresse email n'existe pas.";
+
+        header('Location: formulaire.php?erreur=email');
+        exit;
+    }
 
 
     /*
@@ -42,7 +66,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 
     if (
         isset($_FILES['fichier']) &&
-        $_FILES['fichier']['error'] != UPLOAD_ERR_NO_FILE
+        $_FILES['fichier']['error'] != UPLOAD_ERR_NO_FILE //UPLOAD_ERR_OK signifie que le téléchargement s'est bien passe
     ) {
 
         /* Vérifier s'il y a une erreur */
@@ -51,7 +75,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             $_FILES['fichier']['error'] != UPLOAD_ERR_OK
         ) {
 
-            die("Erreur lors du téléchargement du fichier.");
+            die("Erreur lors du téléchargement du fichier."); //arrete prgrm et afiiche msg derreur
 
         }
 
@@ -94,7 +118,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 
         $nomSecurise =
             preg_replace(
-                '/[^A-Za-z0-9._-]/',
+                '/[^A-Za-z0-9._-]/', // remplace les caracteres qui ne sont pas autorise par _
                 '_',
                 $nomOriginal
             );
@@ -106,7 +130,10 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         */
 
         $nomStocke =
-            uniqid() . '_' . $nomSecurise;
+            uniqid() . '_' . $nomSecurise;    //uniqid() génère un identifiant unique. pr expl 68f5ab12_mon_cv.pdf
+
+
+
 
 
         $destination =
@@ -144,7 +171,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         ) {
 
             unlink(
-                __DIR__ . '/' . $ancienFichier
+                __DIR__ . '/' . $ancienFichier  //unlink suppr
             );
 
         }
@@ -198,9 +225,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 
 
 
-/* =========================================================
-   3. FONCTION POUR AFFICHER LES DONNÉES
-   ========================================================= */
+
 
 function h($value)
 {
@@ -213,9 +238,7 @@ function h($value)
 
 
 
-/* =========================================================
-   4. RÉCUPÉRER LES TABLEAUX
-   ========================================================= */
+
 
 $modules =
     $data['modules'] ?? [];
@@ -307,9 +330,7 @@ if (!is_array($descriptions_stages)) $descriptions_stages = [];
     <h1>Récapitulatif de la fiche</h1>
 
 
-    <!-- =====================================================
-         INFORMATIONS PERSONNELLES
-         ===================================================== -->
+    
 
     <section>
 
@@ -336,7 +357,7 @@ if (!is_array($descriptions_stages)) $descriptions_stages = [];
 
         <div class="information">
 
-            <strong>Âge :</strong>
+            <strong>Age :</strong>
 
             <?= h($data['age'] ?? '') ?>
 
@@ -364,9 +385,7 @@ if (!is_array($descriptions_stages)) $descriptions_stages = [];
 
 
 
-    <!-- =====================================================
-         INFORMATIONS ACADÉMIQUES
-         ===================================================== -->
+    
 
     <section>
 
@@ -429,9 +448,7 @@ if (!is_array($descriptions_stages)) $descriptions_stages = [];
 
 
 
-    <!-- =====================================================
-         PROJETS
-         ===================================================== -->
+    
 
     <section>
 
@@ -540,7 +557,9 @@ if (!is_array($descriptions_stages)) $descriptions_stages = [];
                     <strong>Description :</strong>
                     <br>
 
-                    <?= nl2br(h($description)) ?>
+                    <?= nl2br(h($description)) ?> //nl2br() transforme les retours à la ligne en <br> HTML 
+
+
 
                 </p>
 
@@ -567,9 +586,7 @@ if (!is_array($descriptions_stages)) $descriptions_stages = [];
 
 
 
-    <!-- =====================================================
-         STAGES
-         ===================================================== -->
+    
 
     <section>
 
@@ -705,9 +722,7 @@ if (!is_array($descriptions_stages)) $descriptions_stages = [];
 
 
 
-    <!-- =====================================================
-         AUTRES INFORMATIONS
-         ===================================================== -->
+    
 
     <section>
 
@@ -777,9 +792,7 @@ if (!is_array($descriptions_stages)) $descriptions_stages = [];
 
 
 
-    <!-- =====================================================
-         BOUTONS
-         ===================================================== -->
+   
 
     <div class="buttons">
 

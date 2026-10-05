@@ -1,0 +1,49 @@
+========================================
+FICHE DE RENSEIGNEMENTS
+========================================
+
+RENSEIGNEMENTS PERSONNELS
+-------------------------
+Nom : kouibel
+Prénom : arwa
+Âge : 21
+Téléphone : 0636987852
+Email : kwibelarwa@gmail.com
+
+RENSEIGNEMENTS ACADÉMIQUES
+--------------------------
+Filière : MS
+Année : 1ère année
+Nombre de projets : 1
+Modules : Aucun
+
+PROJETS RÉALISÉS
+----------------
+
+Projet 1
+Nom : gestion des emails
+Date de début : 2026-10-02
+Date de fin : 2026-11-03
+Lieu : tetouan
+Description : bien
+
+STAGES RÉALISÉS
+---------------
+
+Stage 1
+Nom : hhh
+Date de début : 2026-10-02
+Date de fin : 2026-12-03
+Lieu : tetouan
+Description : jkl
+
+AUTRES INFORMATIONS
+-------------------
+Centres d'intérêt : sport
+Compétences : lokijuhg
+Langues : lkjhgf
+Remarques : lkjhg
+Fichier transmis : test.txt
+
+Date d'enregistrement : 02/10/2026 18:04:11
+========================================

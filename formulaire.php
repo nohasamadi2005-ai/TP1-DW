@@ -1,36 +1,33 @@
 <?php
 session_start();
 
-/* =========================================================
-   1. EFFACER LES DONNÉES
-   ========================================================= */
+
+
 
 if (isset($_GET['effacer']) && $_GET['effacer'] == '1') {
 
-    unset($_SESSION['formulaire']);
+    unset($_SESSION['formulaire']);  //supprimer Donnees du form de la session
 
     header('Location: formulaire.php');
     exit;
 }
 
 
-/* =========================================================
-   2. RÉCUPÉRER LES DONNÉES DE LA SESSION
-   ========================================================= */
-
-$data = $_SESSION['formulaire'] ?? [];
 
 
-/* Fonction pour afficher une donnée sans problème HTML */
+$data = $_SESSION['formulaire'] ?? [];  //recupere des donnes de session
+
+
+
 function h($value)
 {
     return htmlspecialchars((string)$value, ENT_QUOTES, 'UTF-8');
 }
 
 
-/* =========================================================
-   3. RÉCUPÉRER LES INFORMATIONS
-   ========================================================= */
+/* 
+   RÉCUPÉRER LES INFORMATIONS
+    */
 
 $modules = $data['modules'] ?? [];
 
@@ -75,9 +72,9 @@ if (!is_array($lieux_stages)) $lieux_stages = [];
 if (!is_array($descriptions_stages)) $descriptions_stages = [];
 
 
-/* =========================================================
-   4. DÉTERMINER LE NOMBRE DE BLOCS À AFFICHER
-   ========================================================= */
+/* 
+    DÉTERMINER LE NOMBRE DE BLOCS À AFFICHER
+   */
 
 $nombre_projets = count($nom_projets);
 
@@ -130,7 +127,7 @@ if ($nombre_stages < 1) {
     </p>
 
 
-    <!-- Message d'erreur concernant les dates -->
+    
 
     <?php
 
@@ -143,6 +140,15 @@ if ($nombre_stages < 1) {
     }
 
     ?>
+    <?php
+if (isset($_SESSION['email_error'])) {
+    echo '<p class="error">'
+        . h($_SESSION['email_error']) .
+        '</p>';
+
+    unset($_SESSION['email_error']); //supprime message derreur de session
+}
+?>
 
 
     <form id="monFormulaire"
@@ -151,10 +157,7 @@ if ($nombre_stages < 1) {
           enctype="multipart/form-data">
 
 
-        <!-- =====================================================
-             RENSEIGNEMENTS PERSONNELS
-             ===================================================== -->
-
+        
         <fieldset>
 
             <legend>Renseignements personnels</legend>
@@ -218,15 +221,13 @@ if ($nombre_stages < 1) {
     required
 >
 
-<p id="email-message"></p>
+<p id="email-message"></p> 
 
         </fieldset>
 
 
 
-        <!-- =====================================================
-             RENSEIGNEMENTS ACADÉMIQUES
-             ===================================================== -->
+    
 
         <fieldset>
 
@@ -265,7 +266,7 @@ if ($nombre_stages < 1) {
                             required
                         >
 
-                        <?= h($filiere) ?>
+                        <?= h($filiere) ?> //affichage de la filiere en evitant contenu contenant du HTML
 
                     </label>
 
@@ -349,10 +350,7 @@ if ($nombre_stages < 1) {
 
 
 
-        <!-- =====================================================
-             PROJETS
-             ===================================================== -->
-
+        
         <fieldset>
 
             <legend>Projets réalisés</legend>
@@ -590,9 +588,7 @@ if ($nombre_stages < 1) {
 
 
 
-        <!-- =====================================================
-             AUTRES INFORMATIONS
-             ===================================================== -->
+       
 
         <fieldset>
 
@@ -702,9 +698,7 @@ if ($nombre_stages < 1) {
 
 <script>
 
-/* =========================================================
-   MODULES DE CHAQUE FILIÈRE
-   ========================================================= */
+
 
 const modulesParFiliere = {
 
@@ -761,7 +755,7 @@ const modulesParFiliere = {
 /* Modules déjà sélectionnés */
 
 let modulesSelectionnes =
-    <?= json_encode(array_values($modules)) ?>;
+    <?= json_encode(array_values($modules)) ?>; //json_encode() transforme les modules en format JavaScript
 
 
 /* Filière déjà sélectionnée */
@@ -771,9 +765,7 @@ let filierePrecedente =
 
 
 
-/* =========================================================
-   AFFICHER / CACHER LA 3ème ANNÉE
-   ========================================================= */
+
 
 function afficherAnnees()
 {
@@ -817,9 +809,7 @@ function afficherAnnees()
 
 
 
-/* =========================================================
-   AFFICHER LES MODULES
-   ========================================================= */
+
 
 function afficherModules()
 {
@@ -832,7 +822,7 @@ function afficherModules()
         document.getElementById("modules-container");
 
 
-    container.innerHTML = "";
+    container.innerHTML = ""; //on vide le conteneur pour que lorsquon passe de GI a GSTR on supprime les anciens modules gi
 
 
     if (!filiere) {
@@ -869,7 +859,7 @@ function afficherModules()
         checkbox.value = module;
 
 
-        if (modulesSelectionnes.includes(module)) {
+        if (modulesSelectionnes.includes(module)) { // conserver ce que deja selectionnee ; les module existent dans le tanbleau
             checkbox.checked = true;
         }
 
@@ -888,7 +878,7 @@ function afficherModules()
                     }
 
                 } else {
-
+//filter() permet de créer un nouveau tableau sans le module décoché.
                     modulesSelectionnes =
                         modulesSelectionnes.filter(
                             function(element)
@@ -906,10 +896,10 @@ function afficherModules()
         label.appendChild(checkbox);
 
         label.appendChild(
-            document.createTextNode(" " + module)
+            document.createTextNode(" " + module) //permet de cree label avec le type checkbox et le nom du module
         );
 
-        container.appendChild(label);
+        container.appendChild(label); //ajoute a la page ce label
     }
 }
 
@@ -932,7 +922,9 @@ radiosFiliere.forEach(
             function()
             {
 
-                if (filierePrecedente != radio.value) {
+                if (filierePrecedente != radio.value) { //Si on change réellement de filière, on efface les anciens modules sélectionnés.
+
+
 
                     modulesSelectionnes = [];
 
@@ -953,9 +945,6 @@ radiosFiliere.forEach(
 
 
 
-/* =========================================================
-   VÉRIFICATION DES DATES
-   ========================================================= */
 
 function configurerDates(bloc)
 {
@@ -988,10 +977,10 @@ function configurerDates(bloc)
         let annee =
             date.getFullYear();
 
-        let mois =
+        let mois =            //getMonth() + 1 : récupère le mois. On ajoute 1, car JavaScript commence les mois à 0 (janvier).
             String(
                 date.getMonth() + 1
-            ).padStart(2, "0");
+            ).padStart(2, "0");    //padStart(2, "0") : ajoute un zéro devant si le nombre contient un seul chiffre.
 
         let jour =
             String(
@@ -1049,9 +1038,6 @@ function configurerDates(bloc)
 
 
 
-/* =========================================================
-   RENUMÉROTATION
-   ========================================================= */
 
 function renumeroterProjets()
 {
@@ -1088,9 +1074,7 @@ function renumeroterStages()
 
 
 
-/* =========================================================
-   METTRE À JOUR LE SELECT DU NOMBRE DE PROJETS
-   ========================================================= */
+
 
 function actualiserNombreProjets()
 {
@@ -1122,9 +1106,7 @@ function actualiserNombreProjets()
 
 
 
-/* =========================================================
-   AJOUTER UN PROJET
-   ========================================================= */
+
 
 function ajouterProjet()
 {
@@ -1184,7 +1166,7 @@ function ajouterProjet()
 
 
     document
-        .getElementById("projets")
+        .getElementById("projets")  //ajouter reelement le bloc de nv projet
         .appendChild(div);
 
 
@@ -1349,7 +1331,7 @@ function ajouterStage()
 
     document
         .getElementById("stages")
-        .appendChild(div);
+        .appendChild(div); //devient visible a la page 
 
 
     configurerDates(div);
@@ -1387,9 +1369,7 @@ blocs.forEach(
 
 
 
-/* =========================================================
-   VÉRIFICATION AVANT L'ENVOI
-   ========================================================= */
+
 
 document
     .getElementById("monFormulaire")
@@ -1434,13 +1414,13 @@ document
                     );
 
 
-                    event.preventDefault();
+                    event.preventDefault(); //empeche lenvoi du formulaire
 
                     return;
                 }
 
 
-                /* Fin avant ou égale au début */
+                
 
                 if (
                     debut != "" &&
@@ -1465,9 +1445,7 @@ document
 
 
 
-/* =========================================================
-   BOUTON EFFACER
-   ========================================================= */
+
 
 document
     .getElementById("effacer")
@@ -1515,9 +1493,7 @@ emailInput.addEventListener("input", function () {
     }
 
 
-    /* =========================
-       1. VÉRIFICATION SYNTAXE
-       ========================= */
+    
 
     let syntaxeValide =
         /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
@@ -1533,17 +1509,15 @@ emailInput.addEventListener("input", function () {
     }
 
 
-    /* =========================
-       2. RÉCUPÉRER LE DOMAINE
-       ========================= */
+    
 
     let domaine =
         email.split("@")[1];
 
 
-    /* =========================
-       3. VÉRIFIER LE DOMAINE
-       ========================= */
+    /* JavaScript envoie une requête au service DNS de Google pour demander 
+
+si le domaine possède un enregistrement MX permettant de recevoir des emails */
 
     fetch(
         "https://dns.google/resolve?name=" +
