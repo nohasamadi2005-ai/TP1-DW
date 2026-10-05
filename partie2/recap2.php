@@ -9,6 +9,7 @@ session_start();
 */
 
 require_once __DIR__ . '/vendor/autoload.php';
+require_once __DIR__ . '/connexion.php';
 
 use Dompdf\Dompdf;
 use Dompdf\Options;
@@ -88,14 +89,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $formations = [];
 
     $diplomes = $_POST['diplome'] ?? [];
-    $etablissements = $_POST['etablissement'] ?? [];
     $datesDebutFormation = $_POST['date_debut_formation'] ?? [];
     $datesFinFormation = $_POST['date_fin_formation'] ?? [];
 
 
     $nombreFormations = max(
         count($diplomes),
-        count($etablissements),
         count($datesDebutFormation),
         count($datesFinFormation)
     );
@@ -104,78 +103,77 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     for ($i = 0; $i < $nombreFormations; $i++) {
 
         $diplome = trim($diplomes[$i] ?? '');
-        $etablissement = trim($etablissements[$i] ?? '');
         $dateDebut = trim($datesDebutFormation[$i] ?? '');
         $dateFin = trim($datesFinFormation[$i] ?? '');
 
 
         if (
             $diplome !== '' ||
-            $etablissement !== '' ||
             $dateDebut !== '' ||
             $dateFin !== ''
         ) {
 
             $formations[] = [
                 'diplome' => $diplome,
-                'etablissement' => $etablissement,
                 'date_debut' => $dateDebut,
                 'date_fin' => $dateFin
             ];
         }
     }
 
+    
 
-    /*
-    |--------------------------------------------------------------------------
-    | STAGES
-    |--------------------------------------------------------------------------
-    */
+/*
+|--------------------------------------------------------------------------
+| STAGES
+|--------------------------------------------------------------------------
+*/
 
-    $stages = [];
+$stages = [];
 
-    $entreprises = $_POST['entreprise'] ?? [];
-    $postes = $_POST['poste'] ?? [];
-    $datesDebutStage = $_POST['date_debut_stage'] ?? [];
-    $datesFinStage = $_POST['date_fin_stage'] ?? [];
-    $descriptions = $_POST['description_stage'] ?? [];
-
-
-    $nombreStages = max(
-        count($entreprises),
-        count($postes),
-        count($datesDebutStage),
-        count($datesFinStage),
-        count($descriptions)
-    );
+$entreprises = $_POST['entreprise'] ?? [];
+$postes = $_POST['poste'] ?? [];
+$datesDebutStage = $_POST['date_debut_stage'] ?? [];
+$datesFinStage = $_POST['date_fin_stage'] ?? [];
+$descriptions = $_POST['description_stage'] ?? [];
 
 
-    for ($i = 0; $i < $nombreStages; $i++) {
+$nombreStages = max(
+    count($entreprises),
+    count($postes),
+    count($datesDebutStage),
+    count($datesFinStage),
+    count($descriptions)
+);
 
-        $entreprise = trim($entreprises[$i] ?? '');
-        $poste = trim($postes[$i] ?? '');
-        $dateDebut = trim($datesDebutStage[$i] ?? '');
-        $dateFin = trim($datesFinStage[$i] ?? '');
-        $description = trim($descriptions[$i] ?? '');
 
+for ($i = 0; $i < $nombreStages; $i++) {
 
-        if (
-            $entreprise !== '' ||
-            $poste !== '' ||
-            $dateDebut !== '' ||
-            $dateFin !== '' ||
-            $description !== ''
-        ) {
+    $entreprise = trim($entreprises[$i] ?? '');
+    $poste = trim($postes[$i] ?? '');
+    $dateDebut = trim($datesDebutStage[$i] ?? '');
+    $dateFin = trim($datesFinStage[$i] ?? '');
+    $description = trim($descriptions[$i] ?? '');
 
-            $stages[] = [
-                'entreprise' => $entreprise,
-                'poste' => $poste,
-                'date_debut' => $dateDebut,
-                'date_fin' => $dateFin,
-                'description' => $description
-            ];
-        }
+    if (
+        $entreprise !== '' ||
+        $poste !== '' ||
+        $dateDebut !== '' ||
+        $dateFin !== '' ||
+        $description !== ''
+    ) {
+
+        $stages[] = [
+            'entreprise' => $entreprise,
+            'poste' => $poste,
+            'date_debut' => $dateDebut,
+            'date_fin' => $dateFin,
+            'email' => $email,
+            'description' => $description
+        ];
     }
+}
+
         /*
     |--------------------------------------------------------------------------
     | VALIDATION DES DATES
@@ -464,7 +462,344 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         exit;
     }
 
+    /*
+|--------------------------------------------------------------------------
+| ENREGISTRER L'UTILISATEUR
+|--------------------------------------------------------------------------
+*/
 
+$sql = "
+    INSERT INTO utilisateur
+    (
+        email,
+        nom,
+        prenom,
+        tel,
+        adresse,
+        photo,
+        age
+    )
+    VALUES
+    (
+        :email,
+        :nom,
+        :prenom,
+        :tel,
+        :adresse,
+        :photo,
+        :age
+    )
+    ON DUPLICATE KEY UPDATE
+        nom = :nom2,
+        prenom = :prenom2,
+        age = :age2,
+        tel = :tel2,
+        adresse = :adresse2,
+        photo = :photo2
+";
+
+$stmt = $pdo->prepare($sql);
+
+$stmt->execute([
+    ':email' => $email,
+    ':nom' => $nom,
+    ':prenom' => $prenom,
+    ':age' => $age,
+    ':tel' => $telephone,
+    ':adresse' => $adresse,
+    ':photo' => $photoPath,
+
+    ':nom2' => $nom,
+    ':prenom2' => $prenom,
+    ':age2' => $age,
+    ':tel2' => $telephone,
+    ':adresse2' => $adresse,
+    ':photo2' => $photoPath
+]);
+
+
+/* 
+|-------------------------------------------------------------------------- 
+| ENREGISTRER LES FORMATIONS
+|-------------------------------------------------------------------------- 
+*/
+
+$stmt = $pdo->prepare(
+    "DELETE FROM formation WHERE email = ?"
+);
+
+$stmt->execute([$email]);
+
+$stmtFormation = $pdo->prepare("
+    INSERT INTO formation
+    (
+        NomF,
+        date_debut,
+        date_fin,
+        email
+    )
+    VALUES
+    (
+        :nom,
+        :date_debut,
+        :date_fin,
+        :email
+    )
+");
+
+foreach ($formations as $formation) {
+
+    $stmtFormation->execute([
+        ':nom' => $formation['diplome'],
+        ':date_debut' => $formation['date_debut'] ?: null,
+        ':date_fin' => $formation['date_fin'] ?: null,
+        ':email' => $email
+    ]);
+}
+
+
+/* 
+|-------------------------------------------------------------------------- 
+| ENREGISTRER LES STAGES
+|-------------------------------------------------------------------------- 
+*/
+
+$stmt = $pdo->prepare(
+    "DELETE FROM stage WHERE email = ?"
+);
+
+$stmt->execute([$email]);
+
+$stmtStage = $pdo->prepare("
+    INSERT INTO stage
+    (
+        entreprise,
+        poste,
+        date_debut,
+        date_fin,
+        email,
+        description
+    )
+    VALUES
+    (
+        :entreprise,
+        :poste,
+        :date_debut,
+        :date_fin,
+        :email,
+        :description
+    )
+");
+
+foreach ($stages as $stage) {
+
+    $stmtStage->execute([
+        ':entreprise' => $stage['entreprise'],
+        ':poste' => $stage['poste'] ?: null,
+        ':date_debut' => $stage['date_debut'] ?: null,
+        ':date_fin' => $stage['date_fin'] ?: null,
+        ':email' => $email,
+        ':description' => $stage['description'] ?: null
+    ]);
+}
+
+
+/*
+|--------------------------------------------------------------------------
+| ENREGISTRER LES LANGUES
+|--------------------------------------------------------------------------
+*/
+
+$listeLangues = preg_split(
+    '/[\r\n,;]+/',
+    $langues,
+    -1,
+    PREG_SPLIT_NO_EMPTY
+);
+
+$listeLangues = array_unique(
+    array_map('trim', $listeLangues)
+);
+
+/* Supprimer les anciennes relations de cet utilisateur */
+$stmt = $pdo->prepare("DELETE FROM parler WHERE email = ?");
+$stmt->execute([$email]);
+
+/* Préparer les requêtes */
+$stmtRechercheLangue = $pdo->prepare("
+    SELECT IdL
+    FROM langue
+    WHERE libelle = ?
+    LIMIT 1
+");
+
+$stmtAjoutLangue = $pdo->prepare("
+    INSERT INTO langue (libelle)
+    VALUES (?)
+");
+
+$stmtAjoutParler = $pdo->prepare("
+    INSERT INTO parler (email, IdL)
+    VALUES (?, ?)
+");
+
+foreach ($listeLangues as $langue) {
+
+    if ($langue === '') {
+        continue;
+    }
+
+    /* Chercher si la langue existe déjà */
+    $stmtRechercheLangue->execute([$langue]);
+
+    $idLangue = $stmtRechercheLangue->fetchColumn();
+
+    /* Si elle n'existe pas, la créer */
+    if (!$idLangue) {
+
+        $stmtAjoutLangue->execute([$langue]);
+
+        $idLangue = $pdo->lastInsertId();
+    }
+
+    /* Associer la langue à l'utilisateur */
+    $stmtAjoutParler->execute([
+        $email,
+        $idLangue
+    ]);
+}
+
+
+/*
+|--------------------------------------------------------------------------
+| ENREGISTRER LES COMPÉTENCES
+|--------------------------------------------------------------------------
+*/
+
+$listeCompetences = preg_split(
+    '/[\r\n,;]+/',
+    $competences,
+    -1,
+    PREG_SPLIT_NO_EMPTY
+);
+
+$listeCompetences = array_unique(
+    array_map('trim', $listeCompetences)
+);
+
+/* Supprimer les anciennes relations */
+$stmt = $pdo->prepare("DELETE FROM maitriser WHERE email = ?");
+$stmt->execute([$email]);
+
+/* Préparer les requêtes */
+$stmtRechercheCompetence = $pdo->prepare("
+    SELECT IdComp
+    FROM competence
+    WHERE libelle = ?
+    LIMIT 1
+");
+
+$stmtAjoutCompetence = $pdo->prepare("
+    INSERT INTO competence (libelle)
+    VALUES (?)
+");
+
+$stmtAjoutMaitriser = $pdo->prepare("
+    INSERT INTO maitriser (email, IdComp)
+    VALUES (?, ?)
+");
+
+foreach ($listeCompetences as $competence) {
+
+    if ($competence === '') {
+        continue;
+    }
+
+    /* Chercher si la compétence existe déjà */
+    $stmtRechercheCompetence->execute([$competence]);
+
+    $idCompetence = $stmtRechercheCompetence->fetchColumn();
+
+    /* Si elle n'existe pas, la créer */
+    if (!$idCompetence) {
+
+        $stmtAjoutCompetence->execute([$competence]);
+
+        $idCompetence = $pdo->lastInsertId();
+    }
+
+    /* Associer la compétence à l'utilisateur */
+    $stmtAjoutMaitriser->execute([
+        $email,
+        $idCompetence
+    ]);
+}
+
+
+/*
+|--------------------------------------------------------------------------
+| ENREGISTRER LES CENTRES D'INTÉRÊT
+|--------------------------------------------------------------------------
+*/
+
+$listeInterets = preg_split(
+    '/[\r\n,;]+/',
+    $interets,
+    -1,
+    PREG_SPLIT_NO_EMPTY
+);
+
+$listeInterets = array_unique(
+    array_map('trim', $listeInterets)
+);
+
+/* Supprimer les anciennes relations */
+$stmt = $pdo->prepare("DELETE FROM avoir WHERE email = ?");
+$stmt->execute([$email]);
+
+/* Préparer les requêtes */
+$stmtRechercheInteret = $pdo->prepare("
+    SELECT IdC
+    FROM centre_interet
+    WHERE libelle = ?
+    LIMIT 1
+");
+
+$stmtAjoutInteret = $pdo->prepare("
+    INSERT INTO centre_interet (libelle)
+    VALUES (?)
+");
+
+$stmtAjoutAvoir = $pdo->prepare("
+    INSERT INTO avoir (email, IdC)
+    VALUES (?, ?)
+");
+
+foreach ($listeInterets as $interet) {
+
+    if ($interet === '') {
+        continue;
+    }
+
+    /* Chercher si le centre d'intérêt existe déjà */
+    $stmtRechercheInteret->execute([$interet]);
+
+    $idInteret = $stmtRechercheInteret->fetchColumn();
+
+    /* Si elle n'existe pas, le créer */
+    if (!$idInteret) {
+
+        $stmtAjoutInteret->execute([$interet]);
+
+        $idInteret = $pdo->lastInsertId();
+    }
+
+    /* Associer le centre d'intérêt à l'utilisateur */
+    $stmtAjoutAvoir->execute([
+        $email,
+        $idInteret
+    ]);
+}
     /*
     |--------------------------------------------------------------------------
     | SAUVEGARDER LE CV EN SESSION
@@ -579,10 +914,6 @@ if (isset($_GET['pdf']) && $_GET['pdf'] == '1') {
 
                 <div class="item-title">
                     ' . h($formation['diplome']) . '
-                </div>
-
-                <div class="item-place">
-                    ' . h($formation['etablissement']) . '
                 </div>
 
                 <div class="item-date">
@@ -1240,12 +1571,6 @@ table {
 
                             </h3>
 
-
-                            <p class="cv-place">
-
-                                <?= h($formation['etablissement']) ?>
-
-                            </p>
 
 
                             <p class="cv-date">

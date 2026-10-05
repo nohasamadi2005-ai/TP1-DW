@@ -60,7 +60,6 @@ if (empty($formations)) {
     $formations = [
         [
             'diplome' => '',
-            'etablissement' => '',
             'date_debut' => '',
             'date_fin' => ''
         ]
