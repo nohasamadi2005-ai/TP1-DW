@@ -250,12 +250,13 @@ if (empty($stages)) {
                         <div>
                             <label>Date de début :</label>
 
-                            <input
-                                type="date"
-                                name="date_debut_formation[]"
-                                value="<?= h($formation['date_debut'] ?? '') ?>"
-                                onchange="verifierDates(this, 'date_debut_formation[]', 'date_fin_formation[]')"
-                            >
+                           <input
+    type="date"
+    name="date_debut_formation[]"
+    value="<?= h($formation['date_debut'] ?? '') ?>"
+    max="<?= date('Y-m-d') ?>"
+    onchange="verifierDates(this, 'date_debut_formation[]', 'date_fin_formation[]')"
+>
                         </div>
 
 
@@ -332,12 +333,13 @@ if (empty($stages)) {
                         <div>
                             <label>Date de début :</label>
 
-                            <input
-                                type="date"
-                                name="date_debut_stage[]"
-                                value="<?= h($stage['date_debut'] ?? '') ?>"
-                                 onchange="verifierDates(this, 'date_debut_stage[]', 'date_fin_stage[]')"
-                            >
+                           <input
+    type="date"
+    name="date_debut_stage[]"
+    value="<?= h($stage['date_debut'] ?? '') ?>"
+    max="<?= date('Y-m-d') ?>"
+    onchange="verifierDates(this, 'date_debut_stage[]', 'date_fin_stage[]')"
+>
                         </div>
 
 
@@ -520,6 +522,7 @@ function ajouterFormation()
                 <input
                     type="date"
                     name="date_debut_formation[]"
+                    max="<?= date('Y-m-d') ?>"
                     onchange="verifierDates(this, 'date_debut_formation[]', 'date_fin_formation[]')"
                 >
 
@@ -596,6 +599,7 @@ function ajouterStage()
                 <input
                     type="date"
                     name="date_debut_stage[]"
+                    max="<?= date('Y-m-d') ?>"
                     onchange="verifierDates(this, 'date_debut_stage[]', 'date_fin_stage[]')"
                 >
 

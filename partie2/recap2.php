@@ -195,7 +195,10 @@ for ($i = 0; $i < $nombreStages; $i++) {
             $erreurDate = "Une date de formation est invalide.";
             break;
         }
-
+        if ($debut !== '' && $debut > date('Y-m-d')) {
+    $erreurDate = "La date de début de formation ne peut pas être dans le futur.";
+    break;
+}
         if ($debut !== '' && $fin !== '' && $fin < $debut) {
             $erreurDate = "La date de fin de formation doit être égale ou postérieure à la date de début.";
             break;
@@ -217,7 +220,10 @@ for ($i = 0; $i < $nombreStages; $i++) {
                 $erreurDate = "Une date de stage est invalide.";
                 break;
             }
-
+            if ($debut !== '' && $debut > date('Y-m-d')) {
+    $erreurDate = "La date de début du stage ne peut pas être dans le futur.";
+    break;
+}
             if ($debut !== '' && $fin !== '' && $fin < $debut) {
                 $erreurDate = "La date de fin du stage doit être égale ou postérieure à la date de début.";
                 break;
@@ -847,27 +853,19 @@ if (empty($cv)) {
 
 
 
-
 if (isset($_GET['pdf']) && $_GET['pdf'] == '1') {
-
-
-    
 
     $options = new Options();
 
     $options->set('isRemoteEnabled', true);
-
     $options->set('defaultFont', 'DejaVu Sans');
-
 
     $dompdf = new Dompdf($options);
 
 
-    /*
-    |--------------------------------------------------------------------------
-    | PHOTO EN BASE64
-    |--------------------------------------------------------------------------
-    */
+    /* =========================================================
+       PHOTO
+    ========================================================= */
 
     $photoBase64 = '';
 
@@ -898,11 +896,9 @@ if (isset($_GET['pdf']) && $_GET['pdf'] == '1') {
     }
 
 
-    /*
-    |--------------------------------------------------------------------------
-    | FORMATIONS HTML
-    |--------------------------------------------------------------------------
-    */
+    /* =========================================================
+       FORMATIONS
+    ========================================================= */
 
     $formationsHTML = '';
 
@@ -910,13 +906,13 @@ if (isset($_GET['pdf']) && $_GET['pdf'] == '1') {
 
         $formationsHTML .= '
 
-            <div class="item">
+            <div class="cv-item">
 
-                <div class="item-title">
+                <div class="cv-item-title">
                     ' . h($formation['diplome']) . '
                 </div>
 
-                <div class="item-date">
+                <div class="cv-date">
                     ' .
                     h(dateCourte($formation['date_debut'])) .
                     ' - ' .
@@ -930,11 +926,9 @@ if (isset($_GET['pdf']) && $_GET['pdf'] == '1') {
     }
 
 
-    /*
-    |--------------------------------------------------------------------------
-    | STAGES HTML
-    |--------------------------------------------------------------------------
-    */
+    /* =========================================================
+       STAGES
+    ========================================================= */
 
     $stagesHTML = '';
 
@@ -942,17 +936,17 @@ if (isset($_GET['pdf']) && $_GET['pdf'] == '1') {
 
         $stagesHTML .= '
 
-            <div class="item">
+            <div class="cv-item">
 
-                <div class="item-title">
+                <div class="cv-item-title">
                     ' . h($stage['poste']) . '
                 </div>
 
-                <div class="item-place">
+                <div class="cv-company">
                     ' . h($stage['entreprise']) . '
                 </div>
 
-                <div class="item-date">
+                <div class="cv-date">
                     ' .
                     h(dateCourte($stage['date_debut'])) .
                     ' - ' .
@@ -960,7 +954,7 @@ if (isset($_GET['pdf']) && $_GET['pdf'] == '1') {
                     '
                 </div>
 
-                <div class="description">
+                <div class="cv-description">
                     ' . nl2br(h($stage['description'])) . '
                 </div>
 
@@ -970,11 +964,28 @@ if (isset($_GET['pdf']) && $_GET['pdf'] == '1') {
     }
 
 
-    /*
-    |--------------------------------------------------------------------------
-    | HTML DU PDF
-    |--------------------------------------------------------------------------
-    */
+    /* =========================================================
+       PHOTO HTML
+    ========================================================= */
+
+    $photoHTML = '';
+
+    if ($photoBase64 !== '') {
+
+        $photoHTML = '
+
+            <img
+                src="' . $photoBase64 . '"
+                class="cv-photo"
+            >
+
+        ';
+    }
+
+
+    /* =========================================================
+       HTML DU PDF
+    ========================================================= */
 
     $html = '
 
@@ -988,64 +999,103 @@ if (isset($_GET['pdf']) && $_GET['pdf'] == '1') {
 
 <style>
 
+/* =========================================================
+   PAGE A4
+========================================================= */
+
 @page {
-    margin: 0;
+
+    size: A4 portrait;
+
+    margin: 12mm 15mm 12mm 15mm;
 }
+
+
+/* =========================================================
+   GÉNÉRAL
+========================================================= */
 
 body {
 
     margin: 0;
 
+    padding: 0;
+
     font-family: DejaVu Sans, sans-serif;
 
-    font-size: 11px;
+    font-size: 10.5px;
 
     color: #333;
+
+    line-height: 1.4;
 }
 
 
-.page {
+/* =========================================================
+   EN-TÊTE
+========================================================= */
 
-    width: 210mm;
+.header {
 
-    min-height: 297mm;
+    position: relative;
 
+    min-height: 35mm;
+
+    border-bottom: 2px solid #2d6a5a;
+
+    margin-bottom: 7mm;
+
+    padding-bottom: 5mm;
 }
 
 
-table {
+.header-text {
 
-    width: 100%;
+    padding-top: 4mm;
 
-    border-collapse: collapse;
+    padding-right: 35mm;
 }
 
 
-.sidebar {
+.cv-title {
 
-    width: 72mm;
+    margin: 0;
 
-    background: #e8f3ef;
+    font-size: 24px;
 
-    vertical-align: top;
+    font-weight: bold;
 
-    padding: 12mm 8mm;
+    color: #2d6a5a;
 
+    letter-spacing: 1px;
 }
 
 
-.main {
+.name {
 
-    width: 138mm;
+    margin-top: 3mm;
 
-    vertical-align: top;
+    font-size: 18px;
 
-    padding: 12mm 10mm;
+    font-weight: bold;
 
+    color: #333;
+
+    text-transform: uppercase;
 }
 
 
-.photo {
+/* =========================================================
+   PHOTO
+========================================================= */
+
+.cv-photo {
+
+    position: absolute;
+
+    top: 0;
+
+    right: 0;
 
     width: 25mm;
 
@@ -1053,119 +1103,159 @@ table {
 
     object-fit: cover;
 
-    margin-bottom: 8mm;
-
+    border: 1px solid #777;
 }
 
 
-.cv-title {
+/* =========================================================
+   SECTIONS
+========================================================= */
 
-    text-align: center;
+.section {
 
-    font-size: 25px;
+    margin-bottom: 6mm;
 
-    font-weight: bold;
-
-    margin-bottom: 5px;
-
-}
-
-
-.name {
-
-    text-align: center;
-
-    font-size: 17px;
-
-    font-weight: bold;
-
-    margin-bottom: 15px;
-
+    page-break-inside: avoid;
 }
 
 
 .section-title {
 
-    font-size: 14px;
+    margin: 0 0 3mm 0;
 
-    font-weight: bold;
-
-    color: #2d6a5a;
+    padding-bottom: 1.5mm;
 
     border-bottom: 1px solid #2d6a5a;
 
-    padding-bottom: 3px;
-
-    margin-top: 14px;
-
-    margin-bottom: 8px;
-
-}
-
-
-.sidebar .section-title {
-
     color: #2d6a5a;
 
-}
-
-
-.contact {
-
-    line-height: 1.6;
-
-}
-
-
-.item {
-
-    margin-bottom: 12px;
-
-}
-
-
-.item-title {
-
-    font-size: 12px;
+    font-size: 13px;
 
     font-weight: bold;
 
+    text-transform: uppercase;
+
+    letter-spacing: 0.5px;
 }
 
 
-.item-place {
+/* =========================================================
+   CONTACT
+========================================================= */
 
-    font-size: 11px;
+.contact {
 
-    margin-top: 2px;
+    width: 100%;
 
+    margin-bottom: 2mm;
 }
 
 
-.item-date {
+.contact-line {
 
-    font-size: 10px;
+    margin-bottom: 1.5mm;
+}
+
+
+.contact-label {
+
+    font-weight: bold;
+
+    color: #444;
+}
+
+
+/* =========================================================
+   FORMATIONS / STAGES
+========================================================= */
+
+.cv-item {
+
+    margin-bottom: 4mm;
+
+    padding-bottom: 3mm;
+
+    border-bottom: 1px solid #e5e5e5;
+
+    page-break-inside: avoid;
+}
+
+
+.cv-item:last-child {
+
+    border-bottom: none;
+
+    margin-bottom: 0;
+}
+
+
+.cv-item-title {
+
+    font-size: 11.5px;
+
+    font-weight: bold;
+
+    color: #333;
+
+    margin-bottom: 1mm;
+}
+
+
+.cv-company {
+
+    font-size: 10.5px;
+
+    font-weight: bold;
+
+    color: #555;
+
+    margin-bottom: 1mm;
+}
+
+
+.cv-date {
+
+    font-size: 9.5px;
 
     color: #777;
 
-    margin-top: 2px;
-
+    margin-bottom: 1.5mm;
 }
 
 
-.description {
+.cv-description {
 
-    margin-top: 5px;
+    font-size: 10px;
 
-    line-height: 1.5;
+    line-height: 1.45;
 
+    color: #444;
 }
 
+
+/* =========================================================
+   TEXTE
+========================================================= */
 
 .text {
 
+    font-size: 10.5px;
+
     line-height: 1.5;
 
+    page-break-inside: avoid;
+}
+
+
+/* =========================================================
+   ÉVITER LES COUPURES
+========================================================= */
+
+h1,
+h2,
+h3 {
+
+    page-break-after: avoid;
 }
 
 </style>
@@ -1175,140 +1265,180 @@ table {
 
 <body>
 
-<div class="page">
+
+<!-- =========================================================
+     EN-TÊTE
+========================================================= -->
+
+<div class="header">
+
+    ' . $photoHTML . '
+
+    <div class="header-text">
+
+        <div class="cv-title">
+            CURRICULUM VITAE
+        </div>
+
+        <div class="name">
+
+            ' .
+            h($cv['prenom']) .
+            ' ' .
+            h($cv['nom']) .
+            '
+
+        </div>
+
+    </div>
+
+</div>
 
 
-<table>
+<!-- =========================================================
+     CONTACT
+========================================================= -->
 
-<tr>
-
-
-<!-- ========================================================= -->
-<!-- SIDEBAR -->
-<!-- ========================================================= -->
-
-<td class="sidebar">
-
-
-';
-
-    if ($photoBase64 !== '') {
-
-        $html .= '
-
-            <img
-                src="' . $photoBase64 . '"
-                class="photo"
-            >
-
-        ';
-    }
-
-
-    $html .= '
+<div class="section">
 
     <div class="section-title">
         CONTACT
     </div>
 
-
     <div class="contact">
 
-        <strong>Email :</strong><br>
-        ' . h($cv['email']) . '<br><br>
+        <div class="contact-line">
 
-        <strong>Téléphone :</strong><br>
-        ' . h($cv['telephone']) . '<br><br>
+            <span class="contact-label">
+                Email :
+            </span>
 
-        <strong>Adresse :</strong><br>
-        ' . h($cv['adresse']) . '<br><br>
+            ' . h($cv['email']) . '
 
-        <strong>Âge :</strong>
-        ' . h($cv['age']) . ' ans
-
-    </div>
+        </div>
 
 
-    <div class="section-title">
-        COMPÉTENCES
-    </div>
+        <div class="contact-line">
+
+            <span class="contact-label">
+                Téléphone :
+            </span>
+
+            ' . h($cv['telephone']) . '
+
+        </div>
 
 
-    <div class="text">
-        ' . nl2br(h($cv['competences'])) . '
-    </div>
+        <div class="contact-line">
+
+            <span class="contact-label">
+                Adresse :
+            </span>
+
+            ' . h($cv['adresse']) . '
+
+        </div>
 
 
-    <div class="section-title">
-        LANGUES
-    </div>
+        <div class="contact-line">
 
+            <span class="contact-label">
+                Âge :
+            </span>
 
-    <div class="text">
-        ' . nl2br(h($cv['langues'])) . '
-    </div>
+            ' . h($cv['age']) . ' ans
 
-
-    <div class="section-title">
-        CENTRES D\'INTÉRÊT
-    </div>
-
-
-    <div class="text">
-        ' . nl2br(h($cv['interets'])) . '
-    </div>
-
-
-</td>
-
-
-<!-- ========================================================= -->
-<!-- MAIN -->
-<!-- ========================================================= -->
-
-<td class="main">
-
-
-    <div class="cv-title">
-        Curriculum Vitae
-    </div>
-
-
-    <div class="name">
-
-        ' .
-        h($cv['prenom']) .
-        ' ' .
-        h($cv['nom']) .
-        '
+        </div>
 
     </div>
 
+</div>
+
+
+<!-- =========================================================
+     FORMATIONS
+========================================================= -->
+
+<div class="section">
 
     <div class="section-title">
         FORMATIONS
     </div>
 
-
     ' . $formationsHTML . '
 
+</div>
+
+
+<!-- =========================================================
+     STAGES
+========================================================= -->
+
+<div class="section">
 
     <div class="section-title">
         EXPÉRIENCES / STAGES
     </div>
 
-
     ' . $stagesHTML . '
 
+</div>
 
-</td>
 
+<!-- =========================================================
+     COMPÉTENCES
+========================================================= -->
 
-</tr>
+<div class="section">
 
-</table>
+    <div class="section-title">
+        COMPÉTENCES
+    </div>
+
+    <div class="text">
+
+        ' . nl2br(h($cv['competences'])) . '
+
+    </div>
 
 </div>
+
+
+<!-- =========================================================
+     LANGUES
+========================================================= -->
+
+<div class="section">
+
+    <div class="section-title">
+        LANGUES
+    </div>
+
+    <div class="text">
+
+        ' . nl2br(h($cv['langues'])) . '
+
+    </div>
+
+</div>
+
+
+
+
+<div class="section">
+
+    <div class="section-title">
+        CENTRES D\'INTÉRÊT
+    </div>
+
+    <div class="text">
+
+        ' . nl2br(h($cv['interets'])) . '
+
+    </div>
+
+</div>
+
 
 </body>
 
@@ -1317,11 +1447,9 @@ table {
 ';
 
 
-    /*
-    |--------------------------------------------------------------------------
-    | GÉNÉRER LE PDF
-    |--------------------------------------------------------------------------
-    */
+    /* =========================================================
+       GÉNÉRER LE PDF
+    ========================================================= */
 
     $dompdf->loadHtml($html, 'UTF-8');
 
@@ -1330,11 +1458,9 @@ table {
     $dompdf->render();
 
 
-    /*
-    |--------------------------------------------------------------------------
-    | TÉLÉCHARGEMENT
-    |--------------------------------------------------------------------------
-    */
+    /* =========================================================
+       TÉLÉCHARGEMENT
+    ========================================================= */
 
     $dompdf->stream(
         'Mon_CV.pdf',
